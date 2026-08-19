@@ -1,0 +1,15 @@
+Packages/
+ServerPackages/
+
+roblox-ecs-combat-design.md
+roblox-large-game-architecture.md
+
+
+# Project place file
+/CombatTesting.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+sourcemap.json

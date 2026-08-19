@@ -1,0 +1,29 @@
+--!strict
+
+export type VfxKind = "Hit" | "Knockback" | "Dodge"
+
+-- server sends byte, client uses this map to get vfx kind
+const byteMap: { VfxKind } = {
+
+    [1] = "Hit",
+    [2] = "Knockback",
+    [3] = "Dodge",
+}
+
+const reverseMap: { [VfxKind]: number } = {}
+
+for byte, vfxKind in byteMap do
+    reverseMap[vfxKind] = byte
+end
+
+const prefabMap: { [VfxKind] : string } = {
+    Hit = "Hit",
+    Knockback = "VerticalLines",
+    Dodge = "Dodge",
+}
+
+return table.freeze {
+    ByteMap = table.freeze(byteMap),
+    ReverseMap = table.freeze(reverseMap),
+    PrefabMap = table.freeze(prefabMap),
+}
