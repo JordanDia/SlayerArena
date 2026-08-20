@@ -10,11 +10,18 @@ const CombatantFactory = require(script.Parent.CombatantFactory)
 
 const DummyService = {}
 
+local dummyContainer: Folder
 local dummyRigs: Folder
 local spawns: Folder
 const activeBySpawn: { [BasePart]: Model } = {}
 const RESPAWN_DELAY = 2
 const INDICATOR_HEIGHT = 6
+
+function DummyService:Init()
+    dummyContainer = Instance.new("Folder")
+    dummyContainer.Name = "DummyContainer"
+    dummyContainer.Parent = workspace
+end
 
 function DummyService:Start()
     dummyRigs = ServerStorage:WaitForChild("Dummies") :: Folder
@@ -43,7 +50,7 @@ function DummyService:_SpawnDummy(spawnPart: BasePart)
     const dummy = dummyPrefab:Clone()
     dummy.Name = kind
     dummy:PivotTo(spawnPart.CFrame)
-    dummy.Parent = workspace
+    dummy.Parent = dummyContainer
     
     const root = dummy:FindFirstChild("HumanoidRootPart") :: BasePart?
     if not root then

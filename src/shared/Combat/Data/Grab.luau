@@ -16,8 +16,8 @@ const NormalGrab: FrameData.FrameData = table.freeze {
     Blockstun = 0,
     PostureDamage = 0,
 
-    KnockbackSpeed = 40,
-    KnockbackUpward = 35,
+    KnockbackSpeed = 75,
+    KnockbackUpward = 100,
     KnockbackDuration = 15,
 
     Ragdoll = true,

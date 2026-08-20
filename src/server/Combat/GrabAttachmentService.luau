@@ -1,5 +1,4 @@
 --!strict
-const PhysicsService = game:GetService("PhysicsService")
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Jecs = require(ReplicatedStorage.Packages.Jecs)
 const Components = require(ReplicatedStorage.Shared.Combat.Components)
@@ -8,15 +7,6 @@ const World = require(ReplicatedStorage.Shared.Combat.World)
 const GrabAttachmentService = {}
 
 function GrabAttachmentService:Init()
-    if not PhysicsService:IsCollisionGroupRegistered("Grabbed") then
-        PhysicsService:RegisterCollisionGroup("Grabbed")
-    else
-        warn("GrabAttachmentService cannot make collision group 'Grabbed', it's already registered")
-    end
-
-
-    PhysicsService:CollisionGroupSetCollidable("Grabbed", "Combatant", false)
-    PhysicsService:CollisionGroupSetCollidable("Grabbed", "Grabbed", false)
 
     World:added(Components.Grabbed, function(entity: World.Entity, _componentId: Jecs.Id<Components.Grabbed>, value: Components.Grabbed, _oldarchetype: Jecs.Archetype)
         const victimCharacterRef = World:get(entity, Components.CharacterRef)
@@ -72,48 +62,12 @@ function GrabAttachmentService:Init()
                     motor:Destroy()
                 end
 
-                
-                
                 victimCharacterRef.Root.RootPriority = 0
             end
         end
     end)
 
-    World:added(Components.Thrown, function(entity: World.Entity, _componentId: Jecs.Id<Components.Thrown>, _value: Components.Thrown, _oldarchetype: Jecs.Archetype)
-
-        const victimCharacterRef = World:get(entity, Components.CharacterRef)
-        if not victimCharacterRef then return end
-
-        for _, part in victimCharacterRef.Model:GetDescendants() do
-            if not part:IsA("BasePart") then continue end
-            part.CollisionGroup = "Grabbed"
-        end
-
-        victimCharacterRef.Humanoid.PlatformStand = true
-    end)
-
-    World:removed(Components.Thrown, function(entity: World.Entity, _componentId: Jecs.Id<Components.Thrown>, isDeleting: boolean?)
-
-        if isDeleting then return end
-
-        const victimCharacterRef = World:get(entity, Components.CharacterRef)
-        if not victimCharacterRef then return end
-
-        for _, part in victimCharacterRef.Model:GetDescendants() do
-            if not part:IsA("BasePart") then continue end
-            part.CollisionGroup = "Combatant"
-        end
-
-        const victimPlayerRef = World:get(entity, Components.PlayerRef)
-        if victimPlayerRef then
-            victimCharacterRef.Root:SetNetworkOwnershipAuto()
-        else
-            victimCharacterRef.Root:SetNetworkOwner(nil)
-        end
-
-        victimCharacterRef.Humanoid.PlatformStand = false
-        
-    end)
+    
 end
 
 return GrabAttachmentService

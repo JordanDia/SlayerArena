@@ -3,6 +3,7 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Block = require(ReplicatedStorage.Shared.Combat.Data.Block)
+const Ragdoll = require(ReplicatedStorage.Shared.Combat.Data.Ragdoll)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const Components = require("../Components")
@@ -187,7 +188,7 @@ const function HitApplicationSystem(tick: number, _delta: number)
             }
             World:set(hit.Attacker, Components.Holding, holding)
 
-            const endsAt = releasesAt + frameData.KnockbackDuration
+            const endsAt = releasesAt + math.max(frameData.KnockbackDuration, Ragdoll.MinDuration)
             const thrown: Components.Thrown = {
                 EndsAt = endsAt,
                 MaxEndsAt = endsAt + THROW_MAX_PAD 
@@ -207,12 +208,15 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 World:set(hit.Target, Components.Knockback, newKnockback)
 
                 if frameData.Ragdoll then
-                    const endsAt = tick + frameData.KnockbackDuration
+                    const endsAt = tick + math.max(frameData.KnockbackDuration, Ragdoll.MinDuration)
                     const thrown: Components.Thrown = {
                         EndsAt = endsAt,
                         MaxEndsAt = endsAt + THROW_MAX_PAD
                     }
                     World:set(hit.Target, Components.Thrown, thrown)
+
+                    const ragdolled: Components.Ragdolled = {}
+                    World:set(hit.Target, Components.Ragdolled, ragdolled)
                 end
     
                 if characterRef and hit.HitIndex == Abilities.Length(hit.Ability) then

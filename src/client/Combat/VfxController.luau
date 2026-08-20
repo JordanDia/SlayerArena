@@ -192,11 +192,12 @@ function VfxController:_Highlight(character: Model, color: Color3)
 
     fadeIn.Completed:Connect(function()
         fadeOut:Play()
-
-        fadeOut.Completed:Connect(function()
-            fadeOut:Destroy()
-        end)
     end)
+
+    fadeOut.Completed:Connect(function()
+        fadeOut:Destroy()
+    end)
+    
     fadeIn:Play()
 
     

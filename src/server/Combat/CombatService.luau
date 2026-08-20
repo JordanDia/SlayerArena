@@ -27,6 +27,7 @@ const MovementLockSystem: Pipeline.System = require(ServerSystems.MovementLockSy
 const HitstopAnimationSystem: Pipeline.System = require(ServerSystems.HitstopAnimationSystem)
 const DummyIndicatorSystem: Pipeline.System = require(ServerSystems.DummyIndicatorSystem)
 const DummyBehaviorSystem: Pipeline.System = require(ServerSystems.DummyBehaviorSystem)
+const RagdollSystem: Pipeline.System = require(SharedSystems.RagdollSystem)
 
 local pipeline: Pipeline.Pipeline? = nil
 
@@ -44,6 +45,7 @@ function CombatService:Init()
     -- Reap
 
     pipeline:Add("Expiry", ExpirySystem)
+    pipeline:Add("Ragdoll", RagdollSystem)
     pipeline:Add("DummyBehaviorSystem", DummyBehaviorSystem)
     pipeline:Add("Block", BlockSystem)
     pipeline:Add("Dodge", DodgeSystem)

@@ -103,8 +103,8 @@ const FourthHit: FrameData.FrameData = table.freeze {
     Blockstun = 15,
     PostureDamage = 10,
 
-    KnockbackSpeed = 60,
-    KnockbackUpward = 30,
+    KnockbackSpeed = 75,
+    KnockbackUpward = 100,
     KnockbackDuration = 20,
 
     Ragdoll = true,

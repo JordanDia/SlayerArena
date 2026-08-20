@@ -121,6 +121,8 @@ export type Holding = {
     Victim: World.Entity,
 }
 
+
+
 export type Dummy = {
     Kind: string,
     Spawn: BasePart,
@@ -139,6 +141,8 @@ export type Thrown = {
     EndsAt: number,
     MaxEndsAt: number,
 }
+
+export type Ragdolled = {}
 
 const Components = {
     CharacterRef = World:component() :: Jecs.Id<CharacterRef>,
@@ -187,6 +191,7 @@ const Components = {
     DummyBehavior = World:component() :: Jecs.Id<DummyBehavior>,
 
     Thrown = World:component() :: Jecs.Id<Thrown>,
+    Ragdolled = World:component() :: Jecs.Id<Ragdolled>,
     
     -- Tags
     Dead = World:entity()
