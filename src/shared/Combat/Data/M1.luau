@@ -4,6 +4,9 @@ const FrameData = require(script.Parent.FrameData)
 const Reactions = require(script.Parent.Reactions)
 const VfxManifest = require(script.Parent.VfxManifest)
 
+const SwingTrail: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 6, Duration = 10}
+const SwingTrailFinisher: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 9, Duration = 10}
+
 const FirstHit: FrameData.FrameData = table.freeze {
     Startup = 6,
     Active = 3,
@@ -30,6 +33,7 @@ const FirstHit: FrameData.FrameData = table.freeze {
     
     ComboWindow = 60,
     
+    Vfx = { SwingTrail },
     AnimationId = "rbxassetid://101027333825650",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -60,6 +64,7 @@ const SecondHit: FrameData.FrameData = table.freeze {
     
     ComboWindow = 60,
 
+    Vfx = { SwingTrail },
     AnimationId = "rbxassetid://97544456513431",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -90,6 +95,7 @@ const ThirdHit: FrameData.FrameData = table.freeze {
 
     ComboWindow = 60,
 
+    Vfx = { SwingTrail },
     AnimationId = "rbxassetid://126850736653474",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -120,6 +126,7 @@ const FourthHit: FrameData.FrameData = table.freeze {
 
     ComboWindow = 60,
 
+    Vfx = { SwingTrailFinisher },
     AnimationId = "rbxassetid://87995838458656",
     Reaction = "Light" :: Reactions.ReactionKind,
 } :: FrameData.FrameData

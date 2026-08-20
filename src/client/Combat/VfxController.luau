@@ -17,11 +17,32 @@ const FADE_OUT_TRANSPARENCY = 1
 const FADE_TIME = 0.1
 const HIT_HIGHLIGHT_COLOR = Color3.fromRGB(255, 0, 0)
 const DODGE_HIGHLIGHT_COLOR = Color3.fromRGB(255, 255, 255)
+const KNOCKBACK_DURATION_SCALE = 4
+const ARM_NAMES = { "Right Arm", "Left Arm" }
+
+local handlers: { [VfxManifest.VfxKind]: (character: Model, duration: number) -> () }
 
 const VfxController = {}
 
 function VfxController:Init()
     VfxAssets = ReplicatedStorage.Assets.VFX
+    handlers = {
+        Hit = function(character: Model, _duration: number)
+            self:_PlayHit(character, VfxAssets)
+        end,
+
+        Knockback = function(character: Model, duration: number)
+            VfxController:_PlayKnockback(character, duration * KNOCKBACK_DURATION_SCALE)
+        end,
+
+        Dodge = function(character: Model, _duration: number)
+            VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
+        end,
+
+        SwingTrail = function(character: Model, duration: number)
+            VfxController:_PlaySwingTrail(character, duration)
+        end,
+    }
 end
 
 function VfxController:Start()
@@ -38,13 +59,14 @@ function VfxController:Start()
 
         const vfxKind: VfxManifest.VfxKind = VfxManifest.ByteMap[data.Kind]
         if not vfxKind then return end
-        if vfxKind == "Hit" then
-            self:_PlayHit(data.Character, VfxAssets)
-        elseif vfxKind == "Knockback" then
-            self:_PlayKnockback(data.Character, VfxAssets, data.Duration * 4)
-        elseif vfxKind == "Dodge" then
-            self:_Highlight(data.Character, DODGE_HIGHLIGHT_COLOR)
+
+        const handler = handlers[vfxKind]
+        if not handler then
+            warn(`No VFX handler for kind: { vfxKind }`)
+            return
         end
+
+        handler(data.Character, data.Duration)
     end)
 end
 
@@ -87,7 +109,7 @@ function VfxController:_PlayHit(character: Model, vfxAssets: Instance)
     self:_Highlight(character, HIT_HIGHLIGHT_COLOR)
 end
 
-function VfxController:_PlayKnockback(character: Model, vfxAssets: Instance, duration: number)
+function VfxController:_PlayKnockback(character: Model, duration: number)
     
     const root = character:FindFirstChild("HumanoidRootPart")
     if not root then return end
@@ -100,7 +122,7 @@ function VfxController:_PlayKnockback(character: Model, vfxAssets: Instance, dur
     const humanoid =  character:FindFirstChild("Humanoid") :: Humanoid?
     if not humanoid then return end
     
-    const prefab = vfxAssets:FindFirstChild(VfxManifest.PrefabMap.Knockback)
+    const prefab = VfxAssets:FindFirstChild(VfxManifest.PrefabMap.Knockback)
     if not prefab then return end
     if not prefab:IsA("BasePart") then return end
 
@@ -201,6 +223,49 @@ function VfxController:_Highlight(character: Model, color: Color3)
     fadeIn:Play()
 end
 
+function VfxController:_PlaySwingTrail(character: Model, duration: number)
+    if not VfxAssets then return end
+
+    const prefab = VfxAssets:FindFirstChild(VfxManifest.PrefabMap.SwingTrail)
+    if not prefab then return end
+
+    const cloned: { Instance } = {}
+    const trails: { Trail } = {}
+
+    for _, armName in ARM_NAMES do
+        const arm = character:FindFirstChild(armName)
+        if not arm then continue end
+        if not arm:IsA("BasePart") then continue end
+
+        const prefabClone = prefab:Clone()
+        for _, child in prefabClone:GetChildren() do
+            child.Parent = arm
+            table.insert(cloned, child)
+
+            if not child:IsA("Trail") then continue end
+            child.Enabled = true
+            table.insert(trails, child)
+        end
+
+        prefabClone:Destroy()
+    end
+
+    task.delay(Scheduler.TicksToSeconds(duration), function()
+        local maxLifetime = 0
+
+        for _, trail in trails do
+            trail.Enabled = false
+            maxLifetime = math.max(trail.Lifetime, maxLifetime)
+        end
+
+        task.delay(maxLifetime, function()
+            for _, instance in cloned do
+                instance:Destroy()
+            end
+        end)
+    end)
+end
+
 function VfxController:_GetMaxLifetime(container: Instance): number
     local maxLifetime = 0
     for _, vfx in container:GetDescendants() do
@@ -213,5 +278,23 @@ function VfxController:_GetMaxLifetime(container: Instance): number
 
     return maxLifetime
 end
+
+handlers = {
+    Hit = function(character: Model, _duration: number)
+        VfxController:_PlayHit(character, VfxAssets)
+    end,
+
+    Knockback = function(character: Model, duration: number)
+        VfxController:_PlayKnockback(character, duration * KNOCKBACK_DURATION_SCALE)
+    end,
+
+    Dodge = function(character: Model, _duration: number)
+        VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
+    end,
+
+    SwingTrail = function(character: Model, duration: number)
+        VfxController:_PlaySwingTrail(character, duration)
+    end,
+}
 
 return VfxController
