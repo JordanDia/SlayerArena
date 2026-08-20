@@ -6,7 +6,6 @@ const Ragdoll = table.freeze {
 
     GroundTime = 20,
     GetupDuration = 30,
-    CheckGroundDistance = 3,
     SettledSpeed = 2,
 
     UpperAngle = 45,

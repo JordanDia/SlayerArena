@@ -1,14 +1,12 @@
 --!strict
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const CharacterState = require(ReplicatedStorage.Shared.Combat.CharacterState)
 const Components = require(ReplicatedStorage.Shared.Combat.Components)
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Ragdoll = require(ReplicatedStorage.Shared.Combat.Data.Ragdoll)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const World = require(ReplicatedStorage.Shared.Combat.World)
-
-const rayParams = RaycastParams.new()
-rayParams.FilterType = Enum.RaycastFilterType.Exclude
 
 const function GrabReleaseSystem(tick: number, _delta: number)
     const consumed: { { Victim: World.Entity, Holder: World.Entity } } = {}
@@ -86,10 +84,7 @@ const function GrabReleaseSystem(tick: number, _delta: number)
         --ExpirySystem will handle it
         if tick >= thrown.MaxEndsAt then continue end
 
-        rayParams.FilterDescendantsInstances = { characterRef.Model }
-        const result = workspace:Raycast(characterRef.Root.Position, Vector3.yAxis * -Ragdoll.CheckGroundDistance, rayParams)
-
-        const grounded = result ~= nil
+        const grounded = CharacterState.IsGrounded(characterRef)
         const settled = characterRef.Root.AssemblyLinearVelocity.Magnitude < Ragdoll.SettledSpeed
 
         if not (grounded and settled) then
