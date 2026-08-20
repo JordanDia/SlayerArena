@@ -3,6 +3,7 @@
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Jecs = require(ReplicatedStorage.Packages.Jecs)
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
+const CooldownDurations = require(ReplicatedStorage.Shared.Combat.Data.CooldownDurations)
 const Reactions = require(ReplicatedStorage.Shared.Combat.Data.Reactions)
 const World = require("./World")
 
@@ -65,6 +66,8 @@ export type Dashing = {
     Direction: Vector3,
 }
 
+export type Cooldowns = { [CooldownDurations.CooldownId]: number }
+
 export type ComboChain = {
     Index: number,
     ExpiresAt: number,
@@ -102,6 +105,7 @@ export type ActiveAttack = {
     HitIndex: number,
     StartedAt: number,
     HasHit: { [World.Entity]: boolean },
+    FiredVfx: { [number]: boolean },
     PausedTicks: number,
 }
 
@@ -166,6 +170,8 @@ const Components = {
 
     -- Movement
     AirJumps = World:component() :: Jecs.Id<AirJumps>,
+
+    Cooldowns = World:component() :: Jecs.Id<Cooldowns>,
 
     -- Attack stuff
     ActiveAttack = World:component() :: Jecs.Id<ActiveAttack>,

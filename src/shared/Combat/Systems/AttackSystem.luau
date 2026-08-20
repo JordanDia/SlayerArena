@@ -46,6 +46,7 @@ const function AttackSystem(tick: number, _delta: number)
             HitIndex = hitIndex,
             StartedAt = tick,
             HasHit = {},
+            FiredVfx = {},
             PausedTicks = 0,
         }
         World:set(entity, Components.ActiveAttack, newActiveAttack)

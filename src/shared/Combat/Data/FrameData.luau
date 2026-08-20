@@ -1,6 +1,13 @@
 --!strict
 
 const Reactions = require(script.Parent.Reactions)
+const VfxManifest = require(script.Parent.VfxManifest)
+
+export type VfxEntry = {
+    read Kind: VfxManifest.VfxKind,
+    read Tick: number,
+    read Duration: number?
+}
 
 -- Timing is in ticks, 60 Hz
 export type FrameData = {
@@ -31,6 +38,8 @@ export type FrameData = {
 
     read AnimationId: string,
     read Reaction: Reactions.ReactionKind,
+
+    read Vfx: { VfxEntry }?,
 
     -- optional, used for grabbing
     read ReleaseTick: number?

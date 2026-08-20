@@ -2,6 +2,7 @@
 
 const FrameData = require(script.Parent.FrameData)
 const Reactions = require(script.Parent.Reactions)
+const VfxManifest = require(script.Parent.VfxManifest)
 
 const FirstHit: FrameData.FrameData = table.freeze {
     Startup = 6,
@@ -28,7 +29,7 @@ const FirstHit: FrameData.FrameData = table.freeze {
     UsableFromBlock = false,
     
     ComboWindow = 60,
-
+    
     AnimationId = "rbxassetid://101027333825650",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
