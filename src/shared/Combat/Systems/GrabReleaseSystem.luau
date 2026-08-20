@@ -78,10 +78,8 @@ const function GrabReleaseSystem(tick: number, _delta: number)
         if tick >= thrown.MaxEndsAt then continue end
 
         if characterRef.Humanoid.FloorMaterial == Enum.Material.Air then
-            thrown.EndsAt = tick + 2
+            thrown.EndsAt = math.max(tick + 2, thrown.EndsAt)
         end
-
-        characterRef.Humanoid.PlatformStand = false
     end
 end
 

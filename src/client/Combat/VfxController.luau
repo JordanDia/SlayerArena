@@ -27,7 +27,6 @@ end
 function VfxController:Start()
 
     Packets.Vfx.listen(function(data: { Character: Instance, Kind: number, Duration: number})
-        print("Vfx packet")
         if not data.Character then return end
         if not data.Character:IsA("Model") then return end
         if not data.Kind then return end

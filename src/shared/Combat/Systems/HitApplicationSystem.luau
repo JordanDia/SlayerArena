@@ -10,6 +10,7 @@ const HitQueue = require("../HitQueue")
 const World = require("../World")
 
 const COMBO_COUNTER_DECAY_OFFSET = 20
+const THROW_MAX_PAD = 120
 
 const function HitApplicationSystem(tick: number, _delta: number)
 
@@ -189,7 +190,7 @@ const function HitApplicationSystem(tick: number, _delta: number)
             const endsAt = releasesAt + frameData.KnockbackDuration
             const thrown: Components.Thrown = {
                 EndsAt = endsAt,
-                MaxEndsAt = endsAt + 120 
+                MaxEndsAt = endsAt + THROW_MAX_PAD 
             }
             World:set(hit.Target, Components.Thrown, thrown)
         else
@@ -204,6 +205,15 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 }
     
                 World:set(hit.Target, Components.Knockback, newKnockback)
+
+                if frameData.Ragdoll then
+                    const endsAt = tick + frameData.KnockbackDuration
+                    const thrown: Components.Thrown = {
+                        EndsAt = endsAt,
+                        MaxEndsAt = endsAt + THROW_MAX_PAD
+                    }
+                    World:set(hit.Target, Components.Thrown, thrown)
+                end
     
                 if characterRef and hit.HitIndex == Abilities.Length(hit.Ability) then
                     Packets.Vfx.sendToAll({Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Knockback, Duration = frameData.KnockbackDuration})

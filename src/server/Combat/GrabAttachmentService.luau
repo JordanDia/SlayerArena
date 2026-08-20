@@ -80,6 +80,7 @@ function GrabAttachmentService:Init()
     end)
 
     World:added(Components.Thrown, function(entity: World.Entity, _componentId: Jecs.Id<Components.Thrown>, _value: Components.Thrown, _oldarchetype: Jecs.Archetype)
+
         const victimCharacterRef = World:get(entity, Components.CharacterRef)
         if not victimCharacterRef then return end
 
@@ -87,9 +88,12 @@ function GrabAttachmentService:Init()
             if not part:IsA("BasePart") then continue end
             part.CollisionGroup = "Grabbed"
         end
+
+        victimCharacterRef.Humanoid.PlatformStand = true
     end)
 
     World:removed(Components.Thrown, function(entity: World.Entity, _componentId: Jecs.Id<Components.Thrown>, isDeleting: boolean?)
+
         if isDeleting then return end
 
         const victimCharacterRef = World:get(entity, Components.CharacterRef)
@@ -106,6 +110,8 @@ function GrabAttachmentService:Init()
         else
             victimCharacterRef.Root:SetNetworkOwner(nil)
         end
+
+        victimCharacterRef.Humanoid.PlatformStand = false
         
     end)
 end

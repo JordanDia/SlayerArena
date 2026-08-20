@@ -17,6 +17,8 @@ export type FrameData = {
     read KnockbackUpward: number,
     read KnockbackDuration: number,
 
+    read Ragdoll: boolean,
+
     read Range: number,
     read Radius: number,
 

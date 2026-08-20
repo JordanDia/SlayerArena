@@ -17,6 +17,8 @@ const FirstHit: FrameData.FrameData = table.freeze {
     KnockbackUpward = 0,
     KnockbackDuration = 5,
 
+    Ragdoll = false,
+
     Range = 6,
     Radius = 3,
 
@@ -44,6 +46,8 @@ const SecondHit: FrameData.FrameData = table.freeze {
     KnockbackSpeed = 5,
     KnockbackUpward = 0,
     KnockbackDuration = 5,
+
+    Ragdoll = false,
 
     Range = 6,
     Radius = 3,
@@ -73,6 +77,8 @@ const ThirdHit: FrameData.FrameData = table.freeze {
     KnockbackUpward = 0,
     KnockbackDuration = 5,
 
+    Ragdoll = false,
+
     Range = 6,
     Radius = 3,
 
@@ -100,6 +106,8 @@ const FourthHit: FrameData.FrameData = table.freeze {
     KnockbackSpeed = 60,
     KnockbackUpward = 30,
     KnockbackDuration = 20,
+
+    Ragdoll = true,
 
     Range = 6,
     Radius = 3,

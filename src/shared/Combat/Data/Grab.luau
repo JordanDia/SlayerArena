@@ -1,8 +1,9 @@
 --!strict
 
 const FrameData = require(script.Parent.FrameData)
+const Reactions = require(script.Parent.Reactions)
 
-const NormalGrab = table.freeze {
+const NormalGrab: FrameData.FrameData = table.freeze {
 
     Startup = 18,
     Active = 3,
@@ -19,6 +20,8 @@ const NormalGrab = table.freeze {
     KnockbackUpward = 35,
     KnockbackDuration = 15,
 
+    Ragdoll = true,
+
     Range = 4,
     Radius = 2.5,
 
@@ -30,9 +33,9 @@ const NormalGrab = table.freeze {
     ComboWindow = 60,
 
     AnimationId = "rbxassetid://137719651597620",
-    Reaction = "Grab",
+    Reaction = "Grab" :: Reactions.ReactionKind,
 
-} :: FrameData.FrameData
+}
 
 const Grab: { FrameData.FrameData } = {
     NormalGrab
