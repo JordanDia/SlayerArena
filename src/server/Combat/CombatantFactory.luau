@@ -129,6 +129,9 @@ function CombatantFactory.Create(character: Model, overrides: StatOverrides?): W
     World:set(entity, Components.Posture, { Current = entityStats.Posture, Max = entityStats.Posture, LastDamagedTick = 0 })
     World:set(entity, Components.AirJumps, { Used = 0, Max = entityStats.AirJumps} )
 
+    const cooldowns: Components.Cooldowns = {}
+    World:set(entity, Components.Cooldowns, cooldowns)
+
     EntityRegistry.Register(character, entity)
     print(`{ character.Name } has entity id: { entity }`)
 
