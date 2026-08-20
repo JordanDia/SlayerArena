@@ -49,7 +49,7 @@ function CombatInputController:Start()
     ContextActionService:BindAction("M1", Attack, true, Enum.UserInputType.MouseButton1)
     ContextActionService:BindAction("Block", Block, true, Enum.KeyCode.F)
     ContextActionService:BindAction("Grab", Grab, true, Enum.KeyCode.G)
-    ContextActionService:BindAction("Dodge", Dodge, true, Enum.KeyCode.C)
+    ContextActionService:BindAction("Dodge", Dodge, true, Enum.KeyCode.E)
 end
 
 return CombatInputController
