@@ -31,7 +31,7 @@ const FirstHit: FrameData.FrameData = table.freeze {
     Reaction = "Light" :: Reactions.ReactionKind,
 }
 
-const SecondHit = table.freeze {
+const SecondHit: FrameData.FrameData = table.freeze {
     Startup = 6,
     Active = 3,
     Recovery = 7,
@@ -53,14 +53,13 @@ const SecondHit = table.freeze {
     IgnoresBlock = false,
     UsableFromBlock = false,
     
-
     ComboWindow = 60,
 
     AnimationId = "rbxassetid://97544456513431",
-    Reaction = "Light",
-} :: FrameData.FrameData
+    Reaction = "Light" :: Reactions.ReactionKind,
+}
 
-const ThirdHit = table.freeze {
+const ThirdHit: FrameData.FrameData = table.freeze {
     Startup = 6,
     Active = 3,
     Recovery = 7,
@@ -85,10 +84,10 @@ const ThirdHit = table.freeze {
     ComboWindow = 60,
 
     AnimationId = "rbxassetid://126850736653474",
-    Reaction = "Light",
-} :: FrameData.FrameData
+    Reaction = "Light" :: Reactions.ReactionKind,
+}
 
-const FourthHit = table.freeze {
+const FourthHit: FrameData.FrameData = table.freeze {
     Startup = 9,
     Active = 3,
     Recovery = 30,

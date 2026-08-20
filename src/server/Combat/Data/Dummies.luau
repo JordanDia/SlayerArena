@@ -52,6 +52,20 @@ const Dummies: { [string]: DummyKind } = {
 
         StartsBlocking = true
     },
+
+    Grabbing = {
+        Stats = {
+            Health = 100000,
+            Posture = 100000,
+        },
+
+        Behavior = {
+            Policy = "Grabbing",
+            Interval = 60,
+        },
+
+        StartsBlocking = false
+    }
     
 
 }

@@ -41,7 +41,6 @@ export type ActionLock = {
     Mask: number,
 }
 
-export type DummyPolicy = "Swinging" | "Punisher"
 export type InvulnerableKind = "Dodge" | "Getup" |  "Spawn"
 export type Invulnerable = {
     StartsAt: number,
@@ -128,6 +127,7 @@ export type Dummy = {
     Indicator: BasePart
 }
 
+export type DummyPolicy = "Swinging" | "Punisher" | "Grabbing"
 export type DummyBehavior = {
     Policy: DummyPolicy,
     Interval: number,

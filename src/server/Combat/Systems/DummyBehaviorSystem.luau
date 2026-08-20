@@ -22,10 +22,12 @@ const function DummyBehaviorSystem(tick: number, _delta: number)
         if tick < dummyBehavior.NextActionAt then continue end
 
         if dummyBehavior.Policy == "Swinging" then
-            World:set(entity, Components.AttackIntent, {
+
+            const attackIntent: Components.AttackIntent = {
                 Ability = "M1",
                 ExpiresAt = Scheduler.GetTick() + 4
-            } :: Components.AttackIntent)
+            }
+            World:set(entity, Components.AttackIntent, attackIntent)
 
         elseif dummyBehavior.Policy == "Punisher" then
             if tick > dummyBehavior.ArmedUntil then continue end
@@ -36,6 +38,13 @@ const function DummyBehaviorSystem(tick: number, _delta: number)
             } :: Components.AttackIntent)
 
             dummyBehavior.ArmedUntil = 0
+
+        elseif dummyBehavior.Policy == "Grabbing" then
+            const attackIntent: Components.AttackIntent = {
+                Ability = "Grab",
+                ExpiresAt = Scheduler.GetTick() + 4
+            }
+            World:set(entity, Components.AttackIntent, attackIntent)
         end
     end
 

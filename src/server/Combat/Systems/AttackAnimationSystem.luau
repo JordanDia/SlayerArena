@@ -14,10 +14,6 @@ const function AttackAnimationSystem(tick: number, _delta: number)
             if not track then continue end
 
             track:Play(0.1)
-
-            if activeAttack.Ability ~= "Grab" then
-                track:AdjustSpeed(1.5)
-            end
         end
     end
     
