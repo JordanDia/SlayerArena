@@ -12,7 +12,7 @@ local VfxAssets: Folder
 -- stores functions to stop knockback VFX for characters
 const activeKnockbacks: { [Model]: () -> () } = {}
 
-const FADE_IN_TRANSPARENCY = 0.5
+const FADE_IN_TRANSPARENCY = 0
 const FADE_OUT_TRANSPARENCY = 1
 const FADE_TIME = 0.1
 const HIT_HIGHLIGHT_COLOR = Color3.fromRGB(255, 0, 0)
@@ -195,12 +195,10 @@ function VfxController:_Highlight(character: Model, color: Color3)
     end)
 
     fadeOut.Completed:Connect(function()
-        fadeOut:Destroy()
+        highlight:Destroy()
     end)
     
     fadeIn:Play()
-
-    
 end
 
 function VfxController:_GetMaxLifetime(container: Instance): number
