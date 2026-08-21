@@ -34,7 +34,7 @@ const DEFAULT_STATS: Stats = table.freeze {
     Health = 100,
     Stamina = 100,
     Posture = 50,
-    AirJumps = 1,
+    AirJumps = 10,
     StaminaRegenPerTick = 2/60
 }
 

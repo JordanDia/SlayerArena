@@ -2,6 +2,7 @@
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Jecs = require(ReplicatedStorage.Packages.Jecs)
 const Components = require(ReplicatedStorage.Shared.Combat.Components)
+const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
 const Dodge = require(ReplicatedStorage.Shared.Combat.Data.Dodge)
@@ -18,11 +19,14 @@ function AnimationHookService:Init()
         const tracks = World:get(entity, Components.AnimationTracks)
         if not tracks then return end
 
-        for _, frameData in M1 do
-            const track = tracks[frameData.AnimationId]
-            if not track then continue end
 
-            track:Stop(0.06)
+        for _, ability in Abilities.Abilities do
+            for _, frameData in ability do
+                const track = tracks[frameData.AnimationId]
+                if not track then continue end
+
+                track:Stop(0.06)
+            end
         end
     end)
 
