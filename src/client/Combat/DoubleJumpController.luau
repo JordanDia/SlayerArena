@@ -18,6 +18,12 @@ function DoubleJumpController:Start()
         if not root then return end
         if not root:IsA("BasePart") then return end
 
+        -- Zero first so a geppo never inherits the previous one. Assigning linear
+        -- velocity already replaces it, but angular does not come along for the ride,
+        -- and a body still spinning from a ragdoll or a slam carries that through.
+        root.AssemblyLinearVelocity = Vector3.zero
+        root.AssemblyAngularVelocity = Vector3.zero
+
         root.AssemblyLinearVelocity = data.Velocity
     end)
 end

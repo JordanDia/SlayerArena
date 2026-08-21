@@ -1,5 +1,6 @@
 --!strict
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const CharacterState = require(ReplicatedStorage.Shared.Combat.CharacterState)
 const Components = require(ReplicatedStorage.Shared.Combat.Components)
 const Cooldowns = require(ReplicatedStorage.Shared.Combat.Cooldowns)
 const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
@@ -26,6 +27,10 @@ const function DashSystem(tick: number, _delta: number)
         const characterRef = World:get(entity, Components.CharacterRef)
         if not characterRef then continue end
 
+        -- Grounded only. Rejecting without removing the intent means a dash buffered
+        -- just before landing still fires on the landing tick, rather than being eaten.
+        if CharacterState.IsAirborne(characterRef) then continue end
+
         const posture = World:get(entity, Components.Posture)
         if not posture then continue end
         if posture.Current < Dash.PostureCost then continue end
@@ -39,11 +44,20 @@ const function DashSystem(tick: number, _delta: number)
 
         Cooldowns.Start(entity, "Dash", tick)
 
+        -- NPCs send no direction, so they fall back to the character-relative vector
+        -- for their chosen kind. Resolved to world space once, here, so every consumer
+        -- reads the same thing and nothing re-derives it from a rotating character.
+        const flat = Vector3.new(dashIntent.Direction.X, 0, dashIntent.Direction.Z)
+        const direction = if flat.Magnitude > 0.001
+            then flat.Unit
+            else CharacterState.YawToWorld(characterRef, Dash.DirectionMap[dashIntent.Kind])
+
         const newDashing: Components.Dashing = {
             EndsAt = tick + Dash.Duration,
-            Direction = Dash.DirectionMap[dashIntent.Kind],
+            Direction = direction,
             Kind = dashIntent.Kind,
         }
+
         World:set(entity, Components.Dashing, newDashing)
 
         const newActionLock: Components.ActionLock = {

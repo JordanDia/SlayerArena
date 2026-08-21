@@ -29,17 +29,15 @@ function DashController:Start()
             activeDash()
         end
 
-        const function GetVelocity(): Vector3
-            const worldDirection = root.CFrame:VectorToWorldSpace(data.Direction)
-            const flat = Vector3.new(worldDirection.X, 0, worldDirection.Z)
-            if flat.Magnitude < 0.001 then return Vector3.zero end
-
-            return flat.Unit * data.Speed
-        end
+        -- Already world space and flattened by DashSystem. Converting again would
+        -- rotate it by the character's facing a second time.
+        const velocity = if data.Direction.Magnitude > 0.001
+            then data.Direction.Unit * data.Speed
+            else Vector3.zero
 
         const linearVel = Instance.new("LinearVelocity")
         linearVel.RelativeTo = Enum.ActuatorRelativeTo.World
-        linearVel.VectorVelocity = GetVelocity()
+        linearVel.VectorVelocity = velocity
         linearVel.MaxForce = math.huge
         linearVel.Attachment0 = rootAttachment
         linearVel.Parent = character
@@ -67,8 +65,6 @@ function DashController:Start()
                 Stop()
                 return
             end
-
-            linearVel.VectorVelocity = GetVelocity()
         end)
 
         activeDash = Stop

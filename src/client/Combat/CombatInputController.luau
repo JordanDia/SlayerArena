@@ -145,7 +145,10 @@ function CombatInputController:Start()
             return Enum.ContextActionResult.Pass
         end
 
-        Packets.DashRequest.send(Dash.ReverseMap[GetDashKind()])
+        Packets.DashRequest.send({
+            Kind = Dash.ReverseMap[GetDashKind()],
+            Direction = GetCameraMoveDirection(),
+        })
         return Enum.ContextActionResult.Sink
     end
 
@@ -176,7 +179,10 @@ function CombatInputController:Start()
     end
 
     UserInputService.JumpRequest:Connect(function()
-        Packets.DoubleJumpRequest.send(DoubleJump.ReverseMap[GetDoubleJumpKind()])
+        Packets.DoubleJumpRequest.send({
+            Kind = DoubleJump.ReverseMap[GetDoubleJumpKind()],
+            Direction = GetCameraMoveDirection(),
+        })
     end)
 
     ContextActionService:BindAction("Dash", DashAction, true, Enum.KeyCode.Q)

@@ -6,11 +6,11 @@ const World = require(ReplicatedStorage.Shared.Combat.World)
 
 const function NpcDashSystem(_tick: number, _delta: number)
     for _entity, dashing, characterRef in World:query(Components.Dashing, Components.CharacterRef):without(Components.PlayerRef, Components.Dead) do
-        const worldDirection = characterRef.Root.CFrame:VectorToWorldSpace(dashing.Direction)
-        const flat = Vector3.new(worldDirection.X, 0, worldDirection.Z)
-        if flat.Magnitude < 0.001 then continue end
+        -- Dashing.Direction is already world space and flattened, resolved once by
+        -- DashSystem. Converting again would rotate it by the character's facing twice.
+        if dashing.Direction.Magnitude < 0.001 then continue end
 
-        characterRef.Root.AssemblyLinearVelocity = flat.Unit * Dash.Speed
+        characterRef.Root.AssemblyLinearVelocity = dashing.Direction.Unit * Dash.Speed
     end
 end
 

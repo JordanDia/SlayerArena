@@ -65,6 +65,9 @@ export type Blockstun = {
 
 export type Dashing = {
     EndsAt: number,
+    -- World space, resolved once at dash start. Consumers must NOT run this through
+    -- VectorToWorldSpace: it used to be character-local, and re-resolving it per frame
+    -- also made dashes curve as AutoRotate turned the character mid-dash.
     Direction: Vector3,
     Kind: Dash.DashKind,
 }
@@ -72,6 +75,8 @@ export type Dashing = {
 export type DoubleJumpIntent = {
     Kind: DoubleJump.DoubleJumpKind,
     ExpiresAt: number,
+    -- World space, already flattened. Zero means no directional input.
+    Direction: Vector3,
 }
 
 export type DoubleJumping = {
@@ -82,6 +87,9 @@ export type DoubleJumping = {
 export type DashIntent = {
     Kind: Dash.DashKind,
     ExpiresAt: number,
+    -- World space and already flattened. Zero means "no input", and the dash falls
+    -- back to the character-relative vector for Kind.
+    Direction: Vector3,
 }
 
 export type Cooldowns = { [CooldownDurations.CooldownId]: number }

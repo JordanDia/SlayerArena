@@ -9,6 +9,8 @@ export type VfxPayload = {
     Kind: number,
     Duration: number,
     Position: Vector3?,
+    -- world space, for effects that have to be aimed rather than just placed
+    Direction: Vector3?,
 }
 
 return ByteNet.defineNamespace("combat", function()
@@ -28,8 +30,11 @@ return ByteNet.defineNamespace("combat", function()
             reliabilityType = "reliable"
         },
 
+        -- Kind picks the animation and must stay character-relative; Direction is the
+        -- camera-relative world vector the dash actually travels along. One value
+        -- cannot do both - snapping to four axes is up to 45 degrees of error.
         DashRequest = ByteNet.definePacket {
-            value = ByteNet.uint8,
+            value = ByteNet.struct { Kind = ByteNet.uint8, Direction = ByteNet.vec3 },
             reliabilityType = "reliable"
         },
 
@@ -38,8 +43,10 @@ return ByteNet.defineNamespace("combat", function()
             reliabilityType = "reliable"
         },
 
+        -- Same split as DashRequest: Kind picks the animation and stays
+        -- character-relative, Direction is the camera-relative world vector travelled.
         DoubleJumpRequest = ByteNet.definePacket {
-            value = ByteNet.uint8,
+            value = ByteNet.struct { Kind = ByteNet.uint8, Direction = ByteNet.vec3 },
             reliabilityType = "reliable"
         },
 
@@ -59,7 +66,7 @@ return ByteNet.defineNamespace("combat", function()
         },
 
         Vfx = ByteNet.definePacket {
-            value = ByteNet.struct { Character = ByteNet.inst, Kind = ByteNet.uint8, Duration = ByteNet.uint16, Position = ByteNet.optional(ByteNet.vec3), },
+            value = ByteNet.struct { Character = ByteNet.inst, Kind = ByteNet.uint8, Duration = ByteNet.uint16, Position = ByteNet.optional(ByteNet.vec3), Direction = ByteNet.optional(ByteNet.vec3), },
             reliabilityType = "reliable"
         },
 

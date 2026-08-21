@@ -1,9 +1,11 @@
 --!strict
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const CharacterState = require(ReplicatedStorage.Shared.Combat.CharacterState)
 const Components = require(ReplicatedStorage.Shared.Combat.Components)
 const Cooldowns = require(ReplicatedStorage.Shared.Combat.Cooldowns)
 const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
+const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const World = require(ReplicatedStorage.Shared.Combat.World)
 
 const ANIMATION_TICKS = 20
@@ -42,13 +44,18 @@ const function DoubleJumpSystem(tick: number, _delta: number)
         if localDirection.Magnitude < 0.001 then
             velocity = Vector3.yAxis * DoubleJump.NeutralSpeed
         else
-            const worldDirection = characterRef.Root.CFrame:VectorToWorldSpace(localDirection)
-            const flat = Vector3.new(worldDirection.X, 0, worldDirection.Z)
+            -- The camera-relative vector the client actually aimed with. Kind only picks
+            -- the animation: resolving the direction from Kind instead would quantise it
+            -- to four character-relative axes, up to 45 degrees off what was pressed.
+            -- NPCs send nothing, so they fall back to their own facing, yaw only.
+            const direction = if doubleJumpIntent.Direction.Magnitude > 0.001
+                then doubleJumpIntent.Direction
+                else CharacterState.YawToWorld(characterRef, localDirection)
 
             -- Speed is the vertical component and the horizontal one is derived from
             -- Angle, so changing the angle re-aims the jump without changing its height.
             const horizontal = DoubleJump.Speed / math.tan(math.rad(DoubleJump.Angle))
-            velocity = flat.Unit * horizontal + Vector3.yAxis * DoubleJump.Speed
+            velocity = direction * horizontal + Vector3.yAxis * DoubleJump.Speed
         end
 
         const newDoubleJumping: Components.DoubleJumping = {
@@ -57,10 +64,22 @@ const function DoubleJumpSystem(tick: number, _delta: number)
         }
         World:set(entity, Components.DoubleJumping, newDoubleJumping)
 
+        -- Sent to everyone, unlike the DoubleJump packet itself, which only the
+        -- jumping player needs. Direction rides along because a spectator cannot
+        -- work out which way somebody else jumped.
+        Packets.Vfx.sendToAll({
+            Character = characterRef.Model,
+            Kind = VfxManifest.ReverseMap.Geppo,
+            Duration = 0,
+            Direction = velocity.Unit,
+        })
+
         const playerRef = World:get(entity, Components.PlayerRef)
         if playerRef then
             Packets.DoubleJump.sendTo({ Velocity = velocity }, playerRef)
         else
+            characterRef.Root.AssemblyLinearVelocity = Vector3.zero
+            characterRef.Root.AssemblyAngularVelocity = Vector3.zero
             characterRef.Root.AssemblyLinearVelocity = velocity
         end
 
