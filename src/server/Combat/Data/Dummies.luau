@@ -26,7 +26,7 @@ const Dummies: { [string]: DummyKind } = {
 
         Behavior = {
             Policy = "Swinging",
-            Interval = 0
+            Interval = 20
         },
     },
 

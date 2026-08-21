@@ -3,11 +3,13 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const RunService = game:GetService("RunService")
 const TweenService = game:GetService("TweenService")
 
+const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Scheduler = require(ReplicatedStorage.Shared.Combat.Scheduler)
 
 local VfxAssets: Folder
+local ghostFolder: Folder
 
 -- stores functions to stop knockback VFX for characters
 const activeKnockbacks: { [Model]: () -> () } = {}
@@ -20,34 +22,21 @@ const DODGE_HIGHLIGHT_COLOR = Color3.fromRGB(255, 255, 255)
 const KNOCKBACK_DURATION_SCALE = 4
 const ARM_NAMES = { "Right Arm", "Left Arm" }
 
-local handlers: { [VfxManifest.VfxKind]: (character: Model, duration: number) -> () }
+local handlers: { [VfxManifest.VfxKind]: (character: Model, data: Packets.VfxPayload) -> () }
 
 const VfxController = {}
 
 function VfxController:Init()
     VfxAssets = ReplicatedStorage.Assets.VFX
-    handlers = {
-        Hit = function(character: Model, _duration: number)
-            self:_PlayHit(character, VfxAssets)
-        end,
 
-        Knockback = function(character: Model, duration: number)
-            VfxController:_PlayKnockback(character, duration * KNOCKBACK_DURATION_SCALE)
-        end,
-
-        Dodge = function(character: Model, _duration: number)
-            VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
-        end,
-
-        SwingTrail = function(character: Model, duration: number)
-            VfxController:_PlaySwingTrail(character, duration)
-        end,
-    }
+    ghostFolder = Instance.new("Folder")
+    ghostFolder.Name = "DashGhosts"
+    ghostFolder.Parent = workspace
 end
 
 function VfxController:Start()
 
-    Packets.Vfx.listen(function(data: { Character: Instance, Kind: number, Duration: number})
+    Packets.Vfx.listen(function(data: Packets.VfxPayload)
         if not data.Character then return end
         if not data.Character:IsA("Model") then return end
         if not data.Kind then return end
@@ -66,7 +55,7 @@ function VfxController:Start()
             return
         end
 
-        handler(data.Character, data.Duration)
+        handler(data.Character, data)
     end)
 end
 
@@ -223,6 +212,173 @@ function VfxController:_Highlight(character: Model, color: Color3)
     fadeIn:Play()
 end
 
+function VfxController:_SpawnGhost(character: Model)
+    if not ghostFolder then return end
+
+    const ghost = Instance.new("Model")
+    ghost.Name = `{ character.Name }_Ghost`
+
+    const parts: { BasePart } = {}
+
+    for _, descendant in character:GetDescendants() do
+        if not descendant:IsA("BasePart") then continue end
+        if descendant.Transparency >= 1 then continue end
+        if descendant:FindFirstAncestorOfClass("Accessory") then continue end
+
+        const part = descendant:Clone()
+        part.Anchored = true
+        part.CanCollide = false
+        part.CanQuery = false
+        part.CanTouch = false
+        part.CastShadow = false
+        part.Massless = true
+        part.CollisionGroup = "Ghost"
+        part.Transparency = Dash.GhostTransparency
+        part.Color = Dash.GhostColor
+        part.Material = Enum.Material.Neon
+        part.CFrame = descendant.CFrame
+
+        for _, child in part:GetDescendants() do
+            if child:IsA("JointInstance") or child:IsA("WeldConstraint") or child:IsA("Attachment") or child:IsA("ParticleEmitter") or child:IsA("Decal") then
+                child:Destroy()
+            end
+        end
+
+        part.Parent = ghost
+        table.insert(parts, part)
+    end
+
+    if #parts == 0 then
+        ghost:Destroy()
+        return
+    end
+
+    ghost.Parent = ghostFolder
+
+    const tweenInfo = TweenInfo.new(Dash.GhostLifetime, Enum.EasingStyle.Linear)
+    for _, part in parts do
+        TweenService:Create(part, tweenInfo, { Transparency = 1 }):Play()
+    end
+
+    task.delay(Dash.GhostLifetime, function()
+        ghost:Destroy()
+    end)
+end
+
+function VfxController:_PlayPerfectBlock(character: Model)
+    if not VfxAssets then return end
+
+    const root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    const rootAttachment = root:FindFirstChild("RootAttachment")
+    if not rootAttachment then return end
+
+    const vfxFolder = VfxAssets:FindFirstChild(VfxManifest.PrefabMap.PerfectBlock)
+    if not vfxFolder then return end
+
+    const particles: { ParticleEmitter } = {}
+    for _, child in vfxFolder:GetChildren() do
+        if not child:IsA("ParticleEmitter") then continue end
+
+        const vfx = child:Clone()
+        vfx.Parent = rootAttachment
+        table.insert(particles, vfx)
+    end
+
+    for _, vfx in particles do
+        const emitCount = vfx:GetAttribute("EmitCount")
+        if typeof(emitCount) == "number" then
+            vfx:Emit(emitCount)
+        else
+            vfx:Emit(25)
+        end
+    end
+
+    const maxLifetime = self:_GetMaxLifetime(vfxFolder)
+
+    task.delay(maxLifetime, function()
+        for _, vfx in particles do
+            vfx:Destroy()
+        end
+    end)
+end
+
+function VfxController:_PlayDash(character: Model, duration: number)
+
+    const root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    if not root:IsA("BasePart") then return end
+
+    if not VfxAssets then return end
+
+    const prefab = VfxAssets:FindFirstChild(VfxManifest.PrefabMap.Dash)
+    if not prefab then return end
+    if not prefab:IsA("BasePart") then return end
+
+    const vfxPart = prefab:Clone()
+    vfxPart.CFrame = root.CFrame
+    vfxPart.Anchored = true
+    vfxPart.CanCollide = false
+    vfxPart.CanQuery = false
+    vfxPart.CanTouch = false
+    vfxPart.Parent = character
+
+    local stopped = false
+    local renderConnection: RBXScriptConnection? = nil
+    local lastGoodCFrame = root.CFrame
+    local ghostsSpawned = 0
+
+    const maxLifetime = self:_GetMaxLifetime(vfxPart)
+
+    const function Stop()
+        if stopped then return end
+        stopped = true
+
+        if renderConnection then
+            renderConnection:Disconnect()
+        end
+
+        for _, particle in vfxPart:GetChildren() do
+            if not particle:IsA("ParticleEmitter") then continue end
+            particle.Enabled = false
+        end
+
+        task.delay(maxLifetime, function()
+            vfxPart:Destroy()
+        end)
+    end
+
+
+    const ghostInterval = Scheduler.TicksToSeconds(duration) / Dash.GhostCount
+
+    local ghostTimer = ghostInterval
+    renderConnection = RunService.RenderStepped:Connect(function(deltaTime: number)
+        if not root.Parent then return end
+        if not vfxPart.Parent then return end
+
+        local cframe = CFrame.lookAt(root.Position, root.Position + root.AssemblyLinearVelocity)
+            * CFrame.Angles(math.rad(-90), 0, 0)
+
+        if root.AssemblyLinearVelocity.Magnitude < 0.1 then
+            cframe = lastGoodCFrame
+        end
+
+        vfxPart.CFrame = cframe
+        lastGoodCFrame = cframe
+
+        ghostTimer += deltaTime
+
+        if ghostsSpawned < Dash.GhostCount and ghostTimer >= ghostInterval then
+            ghostsSpawned += 1
+            VfxController:_SpawnGhost(character)
+            ghostTimer -= ghostInterval
+        end
+    end)
+
+    task.delay(Scheduler.TicksToSeconds(duration), Stop)
+end
+
 function VfxController:_PlaySwingTrail(character: Model, duration: number)
     if not VfxAssets then return end
 
@@ -280,20 +436,28 @@ function VfxController:_GetMaxLifetime(container: Instance): number
 end
 
 handlers = {
-    Hit = function(character: Model, _duration: number)
+    Hit = function(character: Model, _data: Packets.VfxPayload)
         VfxController:_PlayHit(character, VfxAssets)
     end,
 
-    Knockback = function(character: Model, duration: number)
-        VfxController:_PlayKnockback(character, duration * KNOCKBACK_DURATION_SCALE)
+    Knockback = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayKnockback(character, data.Duration * KNOCKBACK_DURATION_SCALE)
     end,
 
-    Dodge = function(character: Model, _duration: number)
+    Dodge = function(character: Model, _data: Packets.VfxPayload)
         VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
     end,
 
-    SwingTrail = function(character: Model, duration: number)
-        VfxController:_PlaySwingTrail(character, duration)
+    SwingTrail = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlaySwingTrail(character, data.Duration)
+    end,
+
+    Dash = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayDash(character, data.Duration)
+    end,
+
+    PerfectBlock = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_PlayPerfectBlock(character)
     end,
 }
 
