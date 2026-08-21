@@ -36,8 +36,13 @@ const animationMap: { [DoubleJumpKind]: string } = {
 
 return table.freeze {
 
-    Speed = 60,
+    Speed = 45,
     NeutralSpeed = 85,
+
+    -- Degrees above horizontal for a directional air jump. Speed stays the vertical
+    -- component, so lowering this lengthens the arc without lowering it. 45 reproduces
+    -- the old equal-parts behaviour exactly.
+    Angle = 30,
 
     ByteMap = table.freeze(byteMap),
     ReverseMap = table.freeze(reverseMap),

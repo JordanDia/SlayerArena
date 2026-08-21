@@ -2,6 +2,7 @@
 
 const CooldownDurations = {
     AirDodge = 180,
+    AirJump = 20,
     Dash = 60,
 }
 
