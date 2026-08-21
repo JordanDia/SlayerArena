@@ -18,6 +18,15 @@ function RagdollService:Init()
     PhysicsService:CollisionGroupSetCollidable("Thrown", "Combatant", false)
     PhysicsService:CollisionGroupSetCollidable("Thrown", "Thrown", false)
 
+    if not PhysicsService:IsCollisionGroupRegistered("Ghost") then
+        PhysicsService:RegisterCollisionGroup("Ghost")
+    end
+
+    PhysicsService:CollisionGroupSetCollidable("Ghost", "Default", false)
+    PhysicsService:CollisionGroupSetCollidable("Ghost", "Combatant", false)
+    PhysicsService:CollisionGroupSetCollidable("Ghost", "Thrown", false)
+    PhysicsService:CollisionGroupSetCollidable("Ghost", "Ghost", false)
+
     World:added(Components.Ragdolled, function(entity: World.Entity, _componentId: Jecs.Id<Components.Ragdolled>, _value: Components.Ragdolled, _oldarchetype: Jecs.Archetype)
         const characterRef = World:get(entity, Components.CharacterRef)
         if not characterRef then return end
