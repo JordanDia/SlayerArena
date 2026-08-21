@@ -22,8 +22,8 @@ const FirstHit: FrameData.FrameData = table.freeze {
 
     Ragdoll = false,
 
-    Range = 2,
-    HitboxSize = Vector3.new(4, 6, 4),
+    Range = 3,
+    HitboxSize = Vector3.new(4, 6, 5),
 
     Hitstop = 2,
 
@@ -54,8 +54,8 @@ const SecondHit: FrameData.FrameData = table.freeze {
 
     Ragdoll = false,
 
-    Range = 2,
-    HitboxSize = Vector3.new(4, 6, 4),
+    Range = 3,
+    HitboxSize = Vector3.new(4, 6, 5),
 
     Hitstop = 2,
 
@@ -86,8 +86,8 @@ const ThirdHit: FrameData.FrameData = table.freeze {
 
     Ragdoll = false,
 
-    Range = 2,
-    HitboxSize = Vector3.new(4, 6, 4),
+    Range = 3,
+    HitboxSize = Vector3.new(4, 6, 5),
 
     Hitstop = 2,
     
@@ -118,8 +118,8 @@ const FourthHit: FrameData.FrameData = table.freeze {
 
     Ragdoll = true,
 
-    Range = 2,
-    HitboxSize = Vector3.new(4, 6, 4),
+    Range = 3,
+    HitboxSize = Vector3.new(4, 6, 5),
 
     Hitstop = 2,
 
@@ -127,7 +127,7 @@ const FourthHit: FrameData.FrameData = table.freeze {
     UsableFromBlock = false,
 
     ComboWindow = 60,
-    JumpLockoutTicks = 12,
+    JumpLockoutTicks = 5,
 
     Vfx = {  },
     AnimationId = "rbxassetid://87995838458656",
