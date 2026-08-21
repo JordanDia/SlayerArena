@@ -1,5 +1,6 @@
 --!strict
 const Abilities = require(script.Parent.Abilities)
+const Dash = require(script.Parent.Dash)
 const Dodge = require(script.Parent.Dodge)
 const Reactions = require(script.Parent.Reactions)
 const States = require(script.Parent.States)
@@ -26,12 +27,16 @@ for _, ability in Abilities.Abilities do
     
 end
 
-for _, animationId in Reactions do
-    Add(animationId, false, Enum.AnimationPriority.Action2)
+for _, reaction in Reactions do
+    Add(reaction.Id, reaction.Looped, Enum.AnimationPriority.Action2)
 end
 
 for _, state in States do
     Add(state.Id, state.Looped, state.Priority)
+end
+
+for _, animationId in Dash.AnimationMap do
+    Add(animationId, true, Enum.AnimationPriority.Action)
 end
 
 Add(Dodge.AnimationId, false, Enum.AnimationPriority.Action)

@@ -7,8 +7,8 @@ const function HitReactionAnimationSystem(tick: number, _delta: number)
     for _entity, stunned, animationTracks in World:query(Components.Stunned, Components.AnimationTracks):without(Components.Dead) do
         if stunned.StartedAt < tick then continue end
 
-        const animationId = Reactions[stunned.Reaction]
-        const track = animationTracks[animationId]
+        const reaction = Reactions[stunned.Reaction]
+        const track = animationTracks[reaction.Id]
 
         if not track then continue end
         track:Play(0.08)

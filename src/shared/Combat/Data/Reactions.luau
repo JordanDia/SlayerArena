@@ -1,13 +1,19 @@
 --!strict
 
-export type ReactionKind = "Light" | "Heavy" | "Launch" | "GuardBreak" | "Grab"
+export type ReactionKind = "Light" | "Heavy" | "Launch" | "GuardBreak" | "Grab" | "Parried"
 
-const Reactions: { [ReactionKind]: string} = {
-    Light = "rbxassetid://109510042993792",
-    Heavy = "rbxassetid://109510042993792",
-    Launch = "rbxassetid://109510042993792",
-    Grab = "rbxassetid://109510042993792",
-    GuardBreak = "rbxassetid://109510042993792",
+export type ReactionAnimation = {
+    read Id: string,
+    read Looped: boolean,
 }
 
-return Reactions
+const Reactions: { [ReactionKind]: ReactionAnimation } = {
+    Light = { Id = "rbxassetid://109510042993792", Looped = false },
+    Heavy = { Id = "rbxassetid://109510042993792", Looped = false },
+    Launch = { Id = "rbxassetid://109510042993792", Looped = false },
+    Grab = { Id = "rbxassetid://109510042993792", Looped = false },
+    GuardBreak = { Id = "rbxassetid://109510042993792", Looped = false },
+    Parried = { Id = "rbxassetid://87767349193816", Looped = true },
+}
+
+return table.freeze(Reactions)

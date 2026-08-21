@@ -12,6 +12,10 @@ export type BlockData = {
     read GuardBreakStun: number,
 
     read MinPostureToBlock: number,
+
+    read PerfectWindow: number,
+    read PerfectBlockstun: number,
+    read PerfectFreeze: number,
 }
 
 const Block: BlockData = {
@@ -26,6 +30,10 @@ const Block: BlockData = {
     GuardBreakStun = 120,
 
     MinPostureToBlock = 5,
+
+    PerfectWindow = 5,
+    PerfectBlockstun = 2,
+    PerfectFreeze = 120,
 }
 
 return table.freeze(Block)
