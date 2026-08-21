@@ -18,6 +18,7 @@ function CombatInputService:Start()
 
         const entity = CharacterBindingService.GetEntity(player.Character)
         if not entity then return end
+        
         World:set(entity, Components.AttackIntent, {
             Ability = "M1" :: Abilities.AbilityId,
             ExpiresAt = Scheduler.GetTick() + 4
@@ -30,6 +31,16 @@ function CombatInputService:Start()
         const entity = CharacterBindingService.GetEntity(player.Character)
         if not entity then return end
         World:set(entity, Components.BlockHeld, {
+            Wants = wants
+        })
+    end)
+
+    Packets.UptiltRequest.listen(function(wants: boolean, player: Player?)
+        if not player or not player.Character then return end
+
+        const entity = CharacterBindingService.GetEntity(player.Character)
+        if not entity then return end
+        World:set(entity, Components.UptiltHeld, {
             Wants = wants
         })
     end)

@@ -66,6 +66,11 @@ return ByteNet.defineNamespace("combat", function()
         BlockRequest = ByteNet.definePacket {
             value = ByteNet.bool,
             reliabilityType = "reliable"
+        },
+
+        UptiltRequest = ByteNet.definePacket {
+            value = ByteNet.bool,
+            reliabilityType = "reliable"
         }
     }
 end)
