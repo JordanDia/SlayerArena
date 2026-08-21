@@ -109,6 +109,10 @@ export type AirJumps = {
     Max: number
 }
 
+export type JumpLockout = {
+    EndsAt: number
+}
+
 export type DodgeIntent = {
     ExpiresAt: number,
 }
@@ -143,6 +147,10 @@ export type Holding = {
     Victim: World.Entity,
 }
 
+export type UptiltHeld = {
+    Wants: boolean,
+}
+
 
 
 export type Dummy = {
@@ -162,6 +170,41 @@ export type DummyBehavior = {
 export type Thrown = {
     EndsAt: number,
     MaxEndsAt: number,
+}
+
+export type Suspended = {
+    StartedAt: number,
+    EndsAt: number,
+    RiseEndsAt: number,
+    Origin: Vector3,
+    Goal: Vector3,
+    Holder: World.Entity,
+}
+
+export type Suspending = {
+    StartedAt: number,
+    EndsAt: number,
+    RiseEndsAt: number,
+    Origin: Vector3,
+    Goal: Vector3,
+    Victim: World.Entity,
+}
+
+--[[
+    Two components rather than one because the pin has two phases with different
+    deadlines: GroundPinPending is waiting for the body to land and expires if it
+    never does, GroundPinned is the hold itself and only starts counting once it
+    has. Splitting them also lets the AlignPosition live in added/removed hooks,
+    which a single component that changes meaning halfway through could not.
+]]
+export type GroundPinPending = {
+    PinTicks: number,
+    EndsAt: number,
+}
+
+export type GroundPinned = {
+    EndsAt: number,
+    Position: Vector3,
 }
 
 export type Ragdolled = {
@@ -190,6 +233,7 @@ const Components = {
 
     -- Movement
     AirJumps = World:component() :: Jecs.Id<AirJumps>,
+    JumpLockout = World:component() :: Jecs.Id<JumpLockout>,
 
     Cooldowns = World:component() :: Jecs.Id<Cooldowns>,
 
@@ -197,6 +241,7 @@ const Components = {
     ActiveAttack = World:component() :: Jecs.Id<ActiveAttack>,
     AttackIntent = World:component() :: Jecs.Id<AttackIntent>,
     Hitstop = World:component() :: Jecs.Id<Hitstop>,
+    UptiltHeld = World:component() :: Jecs.Id<UptiltHeld>,
 
     -- Blocking
     Blocking = World:component() :: Jecs.Id<Blocking>,
@@ -225,6 +270,10 @@ const Components = {
 
     Thrown = World:component() :: Jecs.Id<Thrown>,
     Ragdolled = World:component() :: Jecs.Id<Ragdolled>,
+    Suspended = World:component() :: Jecs.Id<Suspended>,
+    Suspending = World:component() :: Jecs.Id<Suspending>,
+    GroundPinPending = World:component() :: Jecs.Id<GroundPinPending>,
+    GroundPinned = World:component() :: Jecs.Id<GroundPinned>,
     
     -- Tags
     Dead = World:entity()

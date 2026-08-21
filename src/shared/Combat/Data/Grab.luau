@@ -31,6 +31,7 @@ const NormalGrab: FrameData.FrameData = table.freeze {
     UsableFromBlock = true,
     
     ComboWindow = 60,
+    JumpLockoutTicks = 8,
 
     AnimationId = "rbxassetid://137719651597620",
     Reaction = "Grab" :: Reactions.ReactionKind,

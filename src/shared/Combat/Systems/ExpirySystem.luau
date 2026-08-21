@@ -45,6 +45,11 @@ const function ExpirySystem(tick: number, _delta: number)
     CheckExpire(Components.DoubleJumpIntent, GetExpiresAt, tick)
     CheckExpire(Components.DoubleJumping, GetEndsAt, tick)
     CheckExpire(Components.Thrown, GetEndsAt, tick)
+    CheckExpire(Components.Suspended, GetEndsAt, tick)
+    CheckExpire(Components.Suspending, GetEndsAt, tick)
+    CheckExpire(Components.GroundPinPending, GetEndsAt, tick)
+    CheckExpire(Components.GroundPinned, GetEndsAt, tick)
+    CheckExpire(Components.JumpLockout, GetEndsAt, tick)
 end
 
 return ExpirySystem

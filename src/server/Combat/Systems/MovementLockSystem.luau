@@ -16,11 +16,17 @@ const function MovementLockSystem(tick: number, _delta: number)
         const holding = World:has(entity, Components.Holding)
         const blocking = World:has(entity, Components.Blocking)
         const actionLock = World:has(entity, Components.ActionLock)
+        const jumpLockout = World:has(entity, Components.JumpLockout)
+        const suspended = World:has(entity, Components.Suspended)
+        -- Deliberately NOT an ActionLock: AttackSystem reads that as an attack
+        -- rejection, and the whole point of suspending the attacker is that they
+        -- can still act. Movement lock and action lock are separate permissions.
+        const suspending = World:has(entity, Components.Suspending)
 
         local desiredWalkSpeed = BASE_WALK_SPEED
-        local desiredJumpHeight = (stunned or actionLock) and 0 or BASE_JUMP_HEIGHT
+        local desiredJumpHeight = (stunned or actionLock or jumpLockout or suspended or suspending) and 0 or BASE_JUMP_HEIGHT
         
-        if hitstop or stunned or blockstun or holding then
+        if suspended or suspending or hitstop or stunned or blockstun or holding then
             desiredWalkSpeed = 0
             desiredJumpHeight = 0
         elseif blocking then

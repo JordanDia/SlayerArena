@@ -31,8 +31,9 @@ const FirstHit: FrameData.FrameData = table.freeze {
     UsableFromBlock = false,
     
     ComboWindow = 60,
+    JumpLockoutTicks = 10,
     
-    Vfx = { SwingTrail },
+    Vfx = {},
     AnimationId = "rbxassetid://101027333825650",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -62,8 +63,9 @@ const SecondHit: FrameData.FrameData = table.freeze {
     UsableFromBlock = false,
     
     ComboWindow = 60,
+    JumpLockoutTicks = 10,
 
-    Vfx = { SwingTrail },
+    Vfx = {  },
     AnimationId = "rbxassetid://97544456513431",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -93,8 +95,9 @@ const ThirdHit: FrameData.FrameData = table.freeze {
     UsableFromBlock = false,
 
     ComboWindow = 60,
+    JumpLockoutTicks = 10,
 
-    Vfx = { SwingTrail },
+    Vfx = {  },
     AnimationId = "rbxassetid://126850736653474",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -124,11 +127,12 @@ const FourthHit: FrameData.FrameData = table.freeze {
     UsableFromBlock = false,
 
     ComboWindow = 60,
+    JumpLockoutTicks = 12,
 
-    Vfx = { SwingTrailFinisher },
+    Vfx = {  },
     AnimationId = "rbxassetid://87995838458656",
     Reaction = "Light" :: Reactions.ReactionKind,
-} :: FrameData.FrameData
+}
 
 const M1: { FrameData.FrameData } = {
     FirstHit,

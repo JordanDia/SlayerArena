@@ -35,11 +35,21 @@ export type FrameData = {
     read UsableFromBlock: boolean,
 
     read ComboWindow: number,
+    read JumpLockoutTicks: number,
 
     read AnimationId: string,
     read Reaction: Reactions.ReactionKind,
 
     read Vfx: { VfxEntry }?,
+
+    -- optional, presence means this move suspends its victim; value is float length in ticks
+    read SuspendTicks: number?,
+
+    -- optional, ends an in-progress suspend on contact
+    read EndsSuspend: boolean?,
+
+    -- optional, ticks the victim is held down once they land; requires Ragdoll
+    read PinTicks: number?,
 
     -- optional, used for grabbing
     read ReleaseTick: number?
