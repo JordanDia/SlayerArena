@@ -21,17 +21,22 @@ const function GrabReleaseSystem(tick: number, _delta: number)
 
                 const frameData = Abilities.Get(grabbed.Ability, grabbed.HitIndex)
                 const lookVector = holderCharacterRef.Root.CFrame.LookVector
+                -- the weld is destroyed this tick, but the assembly is only rebuilt at the
+                -- next physics step, so the impulse has to wait a tick or it is applied to
+                -- the holder and victim as one body
                 const knockback: Components.Knockback = {
                     Velocity = lookVector * frameData.KnockbackSpeed + Vector3.yAxis * frameData.KnockbackUpward,
-                    StartedAt = tick,
-                    EndsAt = tick + frameData.KnockbackDuration,
+                    StartedAt = tick + 1,
+                    EndsAt = tick + 1 + frameData.KnockbackDuration,
                 }
-                World:set(entity, Components.Knockback, knockback)
-
                 if frameData.Ragdoll then
-                    const ragdoll: Components.Ragdolled = {}
+                    const ragdoll: Components.Ragdolled = {
+                        Facing = victimCharacterRef.Root.CFrame.LookVector,
+                    }
                     World:set(entity, Components.Ragdolled, ragdoll)
                 end
+
+                World:set(entity, Components.Knockback, knockback)
 
                 const stunned = World:get(entity, Components.Stunned)
                 if stunned then
@@ -53,6 +58,16 @@ const function GrabReleaseSystem(tick: number, _delta: number)
     for _, entities in consumed do
         World:remove(entities.Victim, Components.Grabbed)
         World:remove(entities.Holder, Components.Holding)
+
+        -- the carry hands the victim to the holder's client, so an NPC has to be reclaimed
+        -- before the server can impulse it
+        if World:has(entities.Victim, Components.PlayerRef) then continue end
+
+        const victimCharacterRef = World:get(entities.Victim, Components.CharacterRef)
+        if not victimCharacterRef then continue end
+        if victimCharacterRef.Root:IsGrounded() then continue end
+
+        victimCharacterRef.Root:SetNetworkOwner(nil)
     end
 
     const removeHolding: { { Victim: World.Entity, Holder: World.Entity } } = {}

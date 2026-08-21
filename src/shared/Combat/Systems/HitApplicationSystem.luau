@@ -20,9 +20,13 @@ const function HitApplicationSystem(tick: number, _delta: number)
 
         const invulnerable = World:get(hit.Target, Components.Invulnerable)
         if invulnerable and tick >= invulnerable.StartsAt then continue end
-        if World:has(hit.Target, Components.Blocking) and not frameData.IgnoresBlock then
+        const blocking = World:get(hit.Target, Components.Blocking)
+        if blocking and not frameData.IgnoresBlock then
+            const perfect = tick - blocking.Since <= Block.PerfectWindow
+            const blockstunTicks = if perfect then Block.PerfectBlockstun else frameData.Blockstun
+
             const postureComponent = World:get(hit.Target, Components.Posture)
-            if postureComponent then
+            if postureComponent and not perfect then
                 postureComponent.Current -= frameData.PostureDamage
                 postureComponent.Current = math.max(0, postureComponent.Current)
                 postureComponent.LastDamagedTick = tick
@@ -30,15 +34,15 @@ const function HitApplicationSystem(tick: number, _delta: number)
 
             const blockstun = World:get(hit.Target, Components.Blockstun)
             if blockstun then
-                blockstun.EndsAt = math.max(tick + frameData.Blockstun, blockstun.EndsAt)
+                blockstun.EndsAt = math.max(tick + blockstunTicks, blockstun.EndsAt)
             else
                 World:set(hit.Target, Components.Blockstun, {
-                    EndsAt = tick + frameData.Blockstun
+                    EndsAt = tick + blockstunTicks
                 })
             end
 
             const attackerCharacterRef = World:get(hit.Attacker, Components.CharacterRef)
-            if attackerCharacterRef then
+            if attackerCharacterRef and not perfect then
 
                 const lookVector = attackerCharacterRef.Root.CFrame.LookVector
                 const knockbackVelocity = lookVector * Block.PushbackSpeed
@@ -53,10 +57,33 @@ const function HitApplicationSystem(tick: number, _delta: number)
             const activeAttack = World:get(hit.Attacker, Components.ActiveAttack)
             if activeAttack then
                 const attackerFree = activeAttack.StartedAt + frameData.Startup + frameData.Active + frameData.Recovery + activeAttack.PausedTicks
-                const defenderFree = tick + frameData.Blockstun
+                const defenderFree = tick + blockstunTicks
                 const advantage = defenderFree - attackerFree
 
                 print(advantage)
+            end
+
+            if perfect then
+                World:remove(hit.Attacker, Components.ActiveAttack)
+                World:remove(hit.Attacker, Components.ActionLock)
+                World:remove(hit.Attacker, Components.ComboChain)
+
+                const parried: Components.Stunned = {
+                    StartedAt = tick,
+                    EndsAt = tick + Block.PerfectFreeze,
+                    Reaction = "Parried",
+                    Source = hit.Target,
+                }
+                World:set(hit.Attacker, Components.Stunned, parried)
+
+                if attackerCharacterRef then
+                    Packets.Vfx.sendToAll({
+                        Character = attackerCharacterRef.Model,
+                        Kind = VfxManifest.ReverseMap.PerfectBlock,
+                        Duration = 0,
+                        Position = attackerCharacterRef.Root.Position,
+                    })
+                end
             end
             
 
@@ -95,7 +122,7 @@ const function HitApplicationSystem(tick: number, _delta: number)
         end
 
         if characterRef then
-            Packets.Vfx.sendToAll({Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Hit, Duration = 0})
+            Packets.Vfx.sendToAll({Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Hit, Duration = 0, Position = characterRef.Root.Position})
         end
 
         World:remove(hit.Target, Components.ActiveAttack)
@@ -205,8 +232,6 @@ const function HitApplicationSystem(tick: number, _delta: number)
                     EndsAt = tick + frameData.KnockbackDuration,
                 }
     
-                World:set(hit.Target, Components.Knockback, newKnockback)
-
                 if frameData.Ragdoll then
                     const endsAt = tick + math.max(frameData.KnockbackDuration, Ragdoll.MinDuration)
                     const thrown: Components.Thrown = {
@@ -215,10 +240,15 @@ const function HitApplicationSystem(tick: number, _delta: number)
                     }
                     World:set(hit.Target, Components.Thrown, thrown)
 
-                    const ragdolled: Components.Ragdolled = {}
+                    const targetCharacterRef = World:get(hit.Target, Components.CharacterRef)
+                    const ragdolled: Components.Ragdolled = {
+                        Facing = if targetCharacterRef then targetCharacterRef.Root.CFrame.LookVector else Vector3.zAxis,
+                    }
                     World:set(hit.Target, Components.Ragdolled, ragdolled)
                 end
-    
+
+                World:set(hit.Target, Components.Knockback, newKnockback)
+
                 if characterRef and hit.HitIndex == Abilities.Length(hit.Ability) then
                     Packets.Vfx.sendToAll({Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Knockback, Duration = frameData.KnockbackDuration})
                 end

@@ -2,7 +2,6 @@
 const Players = game:GetService("Players")
 
 const Packets = require("@game/ReplicatedStorage/Shared/Combat/Packets")
-const Scheduler = require("@game/ReplicatedStorage/Shared/Combat/Scheduler")
 
 const Player = Players.LocalPlayer
 
@@ -10,29 +9,16 @@ const KnockbackController = {}
 
 function KnockbackController:Start()
 
-    Packets.Knockback.listen(function(data: { Velocity: Vector3, Duration: number})
+    Packets.Knockback.listen(function(data: { Velocity: Vector3, Duration: number })
 
         const character = Player.Character
         if not character then return end
-        
-        local root = character:FindFirstChild("HumanoidRootPart")
+
+        const root = character:FindFirstChild("HumanoidRootPart")
         if not root then return end
-        
-        const rootAttachment = root:FindFirstChild("RootAttachment") :: Attachment?
-        if not rootAttachment then return end
+        if not root:IsA("BasePart") then return end
 
-        const linearVel = Instance.new("LinearVelocity")
-        linearVel.RelativeTo = Enum.ActuatorRelativeTo.World
-        linearVel.VectorVelocity = data.Velocity
-        linearVel.MaxForce = math.huge
-
-        linearVel.Attachment0 = rootAttachment
-        linearVel.Parent = character
-
-        task.delay(Scheduler.TicksToSeconds(data.Duration), function()
-            linearVel:Destroy()
-        end)
-
+        root:ApplyImpulse(data.Velocity * root.AssemblyMass)
     end)
 end
 
