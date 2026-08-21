@@ -4,6 +4,8 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Jecs = require(ReplicatedStorage.Packages.Jecs)
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const CooldownDurations = require(ReplicatedStorage.Shared.Combat.Data.CooldownDurations)
+const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
+const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
 const Reactions = require(ReplicatedStorage.Shared.Combat.Data.Reactions)
 const World = require("./World")
 
@@ -64,6 +66,22 @@ export type Blockstun = {
 export type Dashing = {
     EndsAt: number,
     Direction: Vector3,
+    Kind: Dash.DashKind,
+}
+
+export type DoubleJumpIntent = {
+    Kind: DoubleJump.DoubleJumpKind,
+    ExpiresAt: number,
+}
+
+export type DoubleJumping = {
+    EndsAt: number,
+    Kind: DoubleJump.DoubleJumpKind,
+}
+
+export type DashIntent = {
+    Kind: Dash.DashKind,
+    ExpiresAt: number,
 }
 
 export type Cooldowns = { [CooldownDurations.CooldownId]: number }
@@ -146,7 +164,9 @@ export type Thrown = {
     MaxEndsAt: number,
 }
 
-export type Ragdolled = {}
+export type Ragdolled = {
+    Facing: Vector3,
+}
 
 const Components = {
     CharacterRef = World:component() :: Jecs.Id<CharacterRef>,
@@ -185,6 +205,13 @@ const Components = {
 
     -- Dodging
     DodgeIntent = World:component() :: Jecs.Id<DodgeIntent>,
+
+    -- Dashing
+    DashIntent = World:component() :: Jecs.Id<DashIntent>,
+
+    -- Double jump
+    DoubleJumpIntent = World:component() :: Jecs.Id<DoubleJumpIntent>,
+    DoubleJumping = World:component() :: Jecs.Id<DoubleJumping>,
 
     -- Grabbing
     Grabbed = World:component() :: Jecs.Id<Grabbed>,

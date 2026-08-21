@@ -34,7 +34,7 @@ const DEFAULT_STATS: Stats = table.freeze {
     Health = 100,
     Stamina = 100,
     Posture = 50,
-    AirJumps = 2,
+    AirJumps = 1,
     StaminaRegenPerTick = 2/60
 }
 
@@ -106,6 +106,9 @@ function CombatantFactory.Create(character: Model, overrides: StatOverrides?): W
         warn("ServerStorage.Animations not loaded yet!")
         return nil
     end
+
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
 
     const animationTracks = LoadAnimationTracks(humanoid)
     if not animationTracks then return nil end

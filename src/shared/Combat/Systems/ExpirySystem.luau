@@ -41,6 +41,9 @@ const function ExpirySystem(tick: number, _delta: number)
     CheckExpire(Components.Blockstun, GetEndsAt, tick)
     CheckExpire(Components.AttackIntent, GetExpiresAt, tick)
     CheckExpire(Components.DodgeIntent, GetExpiresAt, tick)
+    CheckExpire(Components.DashIntent, GetExpiresAt, tick)
+    CheckExpire(Components.DoubleJumpIntent, GetExpiresAt, tick)
+    CheckExpire(Components.DoubleJumping, GetEndsAt, tick)
     CheckExpire(Components.Thrown, GetEndsAt, tick)
 end
 
