@@ -1,6 +1,6 @@
 --!strict
 
-export type VfxKind = "Hit" | "Knockback" | "Dodge" | "SwingTrail" | "Dash" | "PerfectBlock"
+export type VfxKind = "Hit" | "Knockback" | "Dodge" | "SwingTrail" | "Dash" | "PerfectBlock" | "Geppo"
 
 -- server sends byte, client uses this map to get vfx kind
 const byteMap: { VfxKind } = {
@@ -11,6 +11,7 @@ const byteMap: { VfxKind } = {
     [4] = "SwingTrail",
     [5] = "Dash",
     [6] = "PerfectBlock",
+    [7] = "Geppo",
 }
 
 const reverseMap: { [VfxKind]: number } = {}
@@ -26,6 +27,7 @@ const prefabMap: { [VfxKind] : string } = {
     SwingTrail = "SwingTrail",
     Dash = "VerticalLines",
     PerfectBlock = "PerfectBlock",
+    Geppo = "Geppo",
 }
 
 return table.freeze {

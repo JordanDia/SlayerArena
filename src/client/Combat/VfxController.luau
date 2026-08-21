@@ -21,6 +21,10 @@ const HIT_HIGHLIGHT_COLOR = Color3.fromRGB(255, 0, 0)
 const DODGE_HIGHLIGHT_COLOR = Color3.fromRGB(255, 255, 255)
 const KNOCKBACK_DURATION_SCALE = 4
 const ARM_NAMES = { "Right Arm", "Left Arm" }
+const GEPPO_DROP = 0
+const GEPPO_DEFAULT_EMIT = 15
+-- The prefab is authored lying on its side, so this rights it after it is aimed.
+const GEPPO_PREFAB_ROTATION = CFrame.Angles(0, math.rad(90), 0)
 
 local handlers: { [VfxManifest.VfxKind]: (character: Model, data: Packets.VfxPayload) -> () }
 
@@ -422,6 +426,51 @@ function VfxController:_PlaySwingTrail(character: Model, duration: number)
     end)
 end
 
+function VfxController:_PlayGeppo(character: Model, direction: Vector3?)
+    if not VfxAssets then return end
+
+    const root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    if not root:IsA("BasePart") then return end
+
+    const prefab = VfxAssets:FindFirstChild(VfxManifest.PrefabMap.Geppo)
+    if not prefab then return end
+
+    const template = if prefab:IsA("BasePart") then prefab else prefab:FindFirstChildWhichIsA("BasePart")
+    if not template then return end
+
+    const position = root.Position - Vector3.yAxis * GEPPO_DROP
+
+    const aim = if direction and direction.Magnitude > 0.001 then direction.Unit else Vector3.yAxis
+
+    -- CFrame.lookAt degenerates when the aim is parallel to its default up vector, which
+    -- a neutral geppo is exactly - it goes straight up. Hand it a different up in that case.
+    const up = if math.abs(aim.Y) > 0.99 then Vector3.zAxis else Vector3.yAxis
+
+    const vfxPart = template:Clone()
+    vfxPart.CFrame = CFrame.lookAt(position, position + aim, up) * GEPPO_PREFAB_ROTATION
+    vfxPart.Anchored = true
+    vfxPart.CanCollide = false
+    vfxPart.CanQuery = false
+    vfxPart.CanTouch = false
+    vfxPart.Parent = workspace
+
+    for _, vfx in vfxPart:GetDescendants() do
+        if not vfx:IsA("ParticleEmitter") then continue end
+
+        const emitCount = vfx:GetAttribute("EmitCount")
+        if typeof(emitCount) == "number" then
+            vfx:Emit(emitCount)
+        else
+            vfx:Emit(GEPPO_DEFAULT_EMIT)
+        end
+    end
+
+    task.delay(self:_GetMaxLifetime(vfxPart), function()
+        vfxPart:Destroy()
+    end)
+end
+
 function VfxController:_GetMaxLifetime(container: Instance): number
     local maxLifetime = 0
     for _, vfx in container:GetDescendants() do
@@ -458,6 +507,10 @@ handlers = {
 
     PerfectBlock = function(character: Model, _data: Packets.VfxPayload)
         VfxController:_PlayPerfectBlock(character)
+    end,
+
+    Geppo = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayGeppo(character, data.Direction)
     end,
 }
 
