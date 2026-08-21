@@ -2,7 +2,6 @@
 
 const FrameData = require(script.Parent.FrameData)
 const Reactions = require(script.Parent.Reactions)
-const VfxManifest = require(script.Parent.VfxManifest)
 
 const SwingTrail: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 6, Duration = 10}
 const SwingTrailFinisher: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 9, Duration = 10}
@@ -23,8 +22,8 @@ const FirstHit: FrameData.FrameData = table.freeze {
 
     Ragdoll = false,
 
-    Range = 6,
-    Radius = 3,
+    Range = 2,
+    HitboxSize = Vector3.new(4, 6, 4),
 
     Hitstop = 2,
 
@@ -54,8 +53,8 @@ const SecondHit: FrameData.FrameData = table.freeze {
 
     Ragdoll = false,
 
-    Range = 6,
-    Radius = 3,
+    Range = 2,
+    HitboxSize = Vector3.new(4, 6, 4),
 
     Hitstop = 2,
 
@@ -85,8 +84,8 @@ const ThirdHit: FrameData.FrameData = table.freeze {
 
     Ragdoll = false,
 
-    Range = 6,
-    Radius = 3,
+    Range = 2,
+    HitboxSize = Vector3.new(4, 6, 4),
 
     Hitstop = 2,
     
@@ -110,14 +109,14 @@ const FourthHit: FrameData.FrameData = table.freeze {
     Blockstun = 15,
     PostureDamage = 10,
 
-    KnockbackSpeed = 75,
-    KnockbackUpward = 100,
-    KnockbackDuration = 20,
+    KnockbackSpeed = 65,
+    KnockbackUpward = 10,
+    KnockbackDuration = 1,
 
     Ragdoll = true,
 
-    Range = 6,
-    Radius = 3,
+    Range = 2,
+    HitboxSize = Vector3.new(4, 6, 4),
 
     Hitstop = 2,
 

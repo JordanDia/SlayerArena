@@ -27,7 +27,7 @@ export type FrameData = {
     read Ragdoll: boolean,
 
     read Range: number,
-    read Radius: number,
+    read HitboxSize: Vector3,
 
     read Hitstop: number,
 

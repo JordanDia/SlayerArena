@@ -16,14 +16,14 @@ const NormalGrab: FrameData.FrameData = table.freeze {
     Blockstun = 0,
     PostureDamage = 0,
 
-    KnockbackSpeed = 75,
-    KnockbackUpward = 100,
+    KnockbackSpeed = 65,
+    KnockbackUpward = 15,
     KnockbackDuration = 15,
 
     Ragdoll = true,
 
-    Range = 4,
-    Radius = 2.5,
+    Range = 2,
+    HitboxSize = Vector3.new(4, 6, 4),
 
     Hitstop = 2,
 
