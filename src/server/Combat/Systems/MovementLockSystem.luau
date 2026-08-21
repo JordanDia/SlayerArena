@@ -6,6 +6,7 @@ const World = require(ReplicatedStorage.Shared.Combat.World)
 const BASE_WALK_SPEED = 16
 const BASE_JUMP_HEIGHT = 7.2
 const ATTACK_WALK_SPEED_CONSTANT = 8
+const DASH_MASK = 3
 
 const function MovementLockSystem(tick: number, _delta: number)
     for entity, characterRef in World:query(Components.CharacterRef):without(Components.Dead) do
@@ -27,7 +28,11 @@ const function MovementLockSystem(tick: number, _delta: number)
             desiredJumpHeight = 0
         elseif actionLock then
             const lock = World:get(entity, Components.ActionLock)
-            desiredWalkSpeed = (lock and lock.Mask == 2) and 0 or ATTACK_WALK_SPEED_CONSTANT
+            if lock and (lock.Mask == 2 or lock.Mask == DASH_MASK) then
+                desiredWalkSpeed = 0
+            else
+                desiredWalkSpeed = ATTACK_WALK_SPEED_CONSTANT
+            end
         end
     
         if characterRef.Humanoid.WalkSpeed ~= desiredWalkSpeed then
