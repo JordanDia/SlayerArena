@@ -4,9 +4,11 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Block = require(ReplicatedStorage.Shared.Combat.Data.Block)
 const Ragdoll = require(ReplicatedStorage.Shared.Combat.Data.Ragdoll)
+const Suspend = require(ReplicatedStorage.Shared.Combat.Data.Suspend)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const Components = require("../Components")
+const Headroom = require("../Headroom")
 const HitQueue = require("../HitQueue")
 const World = require("../World")
 
@@ -20,6 +22,7 @@ const function HitApplicationSystem(tick: number, _delta: number)
 
         const invulnerable = World:get(hit.Target, Components.Invulnerable)
         if invulnerable and tick >= invulnerable.StartsAt then continue end
+        
         const blocking = World:get(hit.Target, Components.Blocking)
         if blocking and not frameData.IgnoresBlock then
             const perfect = tick - blocking.Since <= Block.PerfectWindow
@@ -54,14 +57,14 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 World:set(hit.Target, Components.Knockback, knockback)
             end
 
-            const activeAttack = World:get(hit.Attacker, Components.ActiveAttack)
-            if activeAttack then
-                const attackerFree = activeAttack.StartedAt + frameData.Startup + frameData.Active + frameData.Recovery + activeAttack.PausedTicks
-                const defenderFree = tick + blockstunTicks
-                const advantage = defenderFree - attackerFree
+            -- const activeAttack = World:get(hit.Attacker, Components.ActiveAttack)
+            -- if activeAttack then
+            --     const attackerFree = activeAttack.StartedAt + frameData.Startup + frameData.Active + frameData.Recovery + activeAttack.PausedTicks
+            --     const defenderFree = tick + blockstunTicks
+            --     const advantage = defenderFree - attackerFree
 
-                print(advantage)
-            end
+            --     print(advantage)
+            -- end
 
             if perfect then
                 World:remove(hit.Attacker, Components.ActiveAttack)
@@ -171,6 +174,11 @@ const function HitApplicationSystem(tick: number, _delta: number)
             actionLock.EndsAt += added
         end
 
+        const jumpLockout = World:get(hit.Attacker, Components.JumpLockout)
+        if jumpLockout then
+            jumpLockout.EndsAt += added
+        end
+
         const comboCounter = World:get(hit.Attacker, Components.ComboCounter)
         if comboCounter then
             if comboCounter.Target ~= hit.Target then
@@ -189,6 +197,16 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 Target = hit.Target
             }
             World:set(hit.Attacker, Components.ComboCounter, newComboCounter)
+        end
+
+        -- The slam is what ends the float, and this must run before the branches
+        -- below: the knockback branch skips suspended targets, so removing Suspended
+        -- here is exactly what lets the downward spike through. Removing it also
+        -- fires SuspendAttachmentService's teardown, restoring network ownership
+        -- before the Knockback packet goes out.
+        if frameData.EndsSuspend then
+            World:remove(hit.Target, Components.Suspended)
+            World:remove(hit.Attacker, Components.Suspending)
         end
 
         local shouldHold = false
@@ -221,6 +239,70 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 MaxEndsAt = endsAt + THROW_MAX_PAD 
             }
             World:set(hit.Target, Components.Thrown, thrown)
+        elseif frameData.SuspendTicks and characterRef then
+            -- A suspend owns both characters' positions outright, so it deliberately
+            -- writes no Knockback: an impulse on a constrained assembly fights the
+            -- constraint it is about to be given.
+            const attackerCharacterRef = World:get(hit.Attacker, Components.CharacterRef)
+            const ignore = { characterRef.Model } :: { Instance }
+            if attackerCharacterRef then
+                table.insert(ignore, attackerCharacterRef.Model)
+            end
+
+            const travel = Vector3.yAxis * Suspend.Height
+            local height = Headroom.Resolve(characterRef.Root.Position, Suspend.CastSize, travel, Suspend.CeilingMargin, ignore)
+
+            -- Both rise to the same height, so the lower of the two ceilings wins.
+            -- Otherwise a beam over only one of them splits the pair apart.
+            if attackerCharacterRef then
+                const attackerHeight = Headroom.Resolve(attackerCharacterRef.Root.Position, Suspend.CastSize, travel, Suspend.CeilingMargin, ignore)
+                height = math.min(height, attackerHeight)
+            end
+
+            const riseEndsAt = tick + Suspend.RiseTicks
+            const endsAt = riseEndsAt + frameData.SuspendTicks
+
+            -- The attacker is the anchor: they rise straight up, and the victim is placed
+            -- relative to them. Anchoring on the victim instead would let the pair drift
+            -- apart by however far the attacker happened to be standing when it landed.
+            local victimGoal = characterRef.Root.Position + Vector3.yAxis * height
+
+            if attackerCharacterRef then
+                const attackerGoal = attackerCharacterRef.Root.Position + Vector3.yAxis * height
+
+                const toVictim = characterRef.Root.Position - attackerCharacterRef.Root.Position
+                const flat = Vector3.new(toVictim.X, 0, toVictim.Z)
+                const facing = if flat.Magnitude > 0.001
+                    then flat.Unit
+                    else attackerCharacterRef.Root.CFrame.LookVector
+
+                -- The slot in front of the attacker may be inside a wall, so cast out to
+                -- it and take whatever fits.
+                const slotTravel = facing * Suspend.VictimDistance
+                const slotDistance = Headroom.Resolve(attackerGoal, Suspend.CastSize, slotTravel, Suspend.CeilingMargin, ignore)
+                victimGoal = attackerGoal + facing * slotDistance
+
+                const suspending: Components.Suspending = {
+                    StartedAt = tick,
+                    RiseEndsAt = riseEndsAt,
+                    EndsAt = endsAt,
+                    Origin = attackerCharacterRef.Root.Position,
+                    Goal = attackerGoal,
+                    Victim = hit.Target,
+                }
+                World:set(hit.Attacker, Components.Suspending, suspending)
+            end
+
+            const suspended: Components.Suspended = {
+                StartedAt = tick,
+                RiseEndsAt = riseEndsAt,
+                EndsAt = endsAt,
+                Origin = characterRef.Root.Position,
+                Goal = victimGoal,
+                Holder = hit.Attacker,
+            }
+            World:set(hit.Target, Components.Suspended, suspended)
+
         else
             const attackerCharacterRef = World:get(hit.Attacker, Components.CharacterRef)
             if attackerCharacterRef then
@@ -245,9 +327,22 @@ const function HitApplicationSystem(tick: number, _delta: number)
                         Facing = if targetCharacterRef then targetCharacterRef.Root.CFrame.LookVector else Vector3.zAxis,
                     }
                     World:set(hit.Target, Components.Ragdolled, ragdolled)
+
+                    if frameData.PinTicks then
+                        const pending: Components.GroundPinPending = {
+                            PinTicks = frameData.PinTicks,
+                            EndsAt = tick + Ragdoll.PinGiveUp,
+                        }
+                        World:set(hit.Target, Components.GroundPinPending, pending)
+                    end
                 end
 
-                World:set(hit.Target, Components.Knockback, newKnockback)
+                -- A suspended victim's position is owned by their AlignPosition. An
+                -- impulse here would shove them out of the float and the next hit of
+                -- the air string would whiff.
+                if not World:has(hit.Target, Components.Suspended) then
+                    World:set(hit.Target, Components.Knockback, newKnockback)
+                end
 
                 if characterRef and hit.HitIndex == Abilities.Length(hit.Ability) then
                     Packets.Vfx.sendToAll({Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Knockback, Duration = frameData.KnockbackDuration})
