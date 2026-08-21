@@ -67,9 +67,7 @@ const function AttackSystem(tick: number, _delta: number)
         }
         World:set(entity, Components.ActiveAttack, newActiveAttack)
         World:remove(entity, Components.Blocking)
-
-        print(newActiveAttack.Ability, newActiveAttack.HitIndex)
-
+        
         const newComboChain: Components.ComboChain = {
             Index = hitIndex,
             ExpiresAt = tick + frameData.ComboWindow,
