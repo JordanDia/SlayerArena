@@ -6,6 +6,7 @@ const Abilities = require(script.Parent.Abilities)
 const SkillSlots: { Abilities.AbilityId } = {
 
     [1] = "Pistol",
+    [2] = "Gatling",
 }
 
 return table.freeze(SkillSlots)

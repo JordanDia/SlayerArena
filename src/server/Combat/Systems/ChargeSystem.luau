@@ -95,7 +95,9 @@ const function ChargeSystem(tick: number, _delta: number)
 
         const frameData = Abilities.Get(activeAttack.Ability, activeAttack.HitIndex)
         const elapsed = tick - activeAttack.StartedAt - activeAttack.PausedTicks
-        if elapsed >= frameData.Startup then
+        const aimEnd = if frameData.AimsWhileActive then frameData.Startup + frameData.Active else frameData.Startup
+
+        if elapsed >= aimEnd then
             table.insert(unaimed, entity)
         end
     end

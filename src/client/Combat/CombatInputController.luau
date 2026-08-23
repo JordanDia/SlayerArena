@@ -111,6 +111,14 @@ function CombatInputController:Start()
         return Enum.ContextActionResult.Sink
     end
 
+    const function Skill2(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
+        if inputState == Enum.UserInputState.Begin then
+            Packets.SkillRequest.send(2)
+        end
+
+        return Enum.ContextActionResult.Sink
+    end
+
     const function Grab(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
         if inputState ~= Enum.UserInputState.Begin then
             return Enum.ContextActionResult.Pass
@@ -179,6 +187,7 @@ function CombatInputController:Start()
     ContextActionService:BindAction("Uptitle", Uptilt, true, Enum.KeyCode.Space)
     ContextActionService:BindAction("Grab", Grab, true, Enum.KeyCode.G)
     ContextActionService:BindAction("Skill1", Skill1, true, Enum.KeyCode.Z)
+    ContextActionService:BindAction("Skill2", Skill2, true, Enum.KeyCode.X)
     -- ContextActionService:BindAction("Dodge", Dodge, true, Enum.KeyCode.E)
     const function GetDoubleJumpKind(): DoubleJump.DoubleJumpKind
         const localMove = GetLocalMoveDirection()

@@ -23,6 +23,9 @@ end
 for _, ability in Abilities.Abilities do
     for _, frameData in ability do
         Add(frameData.AnimationId, false, Enum.AnimationPriority.Action)
+        if frameData.LoopAnimationId then
+            Add(frameData.LoopAnimationId, true, Enum.AnimationPriority.Action)
+        end
     end
     
 end

@@ -5,8 +5,9 @@ const Grab = require(script.Parent.Grab)
 const M1 = require(script.Parent.M1)
 const Pistol = require(script.Parent.Pistol)
 const Uptilt = require(script.Parent.Uptilt)
+const Gatling = require(script.Parent.Gatling)
 
-export type AbilityId = "M1" | "Grab" | "Uptilt" | "Air" | "Pistol"
+export type AbilityId = "M1" | "Grab" | "Uptilt" | "Air" | "Pistol" | "Gatling"
 
 const Abilities: { [AbilityId]: { FrameData.FrameData } } = {
     M1 = M1,
@@ -14,6 +15,7 @@ const Abilities: { [AbilityId]: { FrameData.FrameData } } = {
     Uptilt = Uptilt,
     Air = Air,
     Pistol = Pistol,
+    Gatling = Gatling,
 }
 
 const function Get(ability: AbilityId, hitIndex: number)

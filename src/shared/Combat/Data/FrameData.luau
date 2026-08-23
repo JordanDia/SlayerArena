@@ -34,6 +34,7 @@ export type FrameData = {
 
     read Range: number,
     read HitboxSize: Vector3,
+    read HitInterval: number?,
 
     read Hitstop: number,
 
@@ -62,6 +63,7 @@ export type FrameData = {
     -- optional, holds the last tick of startup until the input is released
     read Chargeable: boolean?,
     read MaxChargeTicks: number?,
+    read AimsWhileActive: boolean?,
 
     -- optional, self knockback; RecoilTick is measured from the start of the attack
     read RecoilTick: number?,
@@ -80,7 +82,8 @@ export type FrameData = {
     read PinTicks: number?,
 
     -- optional, used for grabbing
-    read ReleaseTick: number?
+    read ReleaseTick: number?,
+    read LoopAnimationId: string?
 }
 
 return {}

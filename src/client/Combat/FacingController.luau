@@ -6,7 +6,7 @@ const UserInputService = game:GetService("UserInputService")
 
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 
-const TURN_SPEED = 50
+const TURN_SPEED = 200
 const AIM_DISTANCE = 500
 
 const player = Players.LocalPlayer

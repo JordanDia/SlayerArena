@@ -9,7 +9,7 @@ const World = require("../World")
 const RunService = game:GetService("RunService")
 
 const SHOW_HITBOXES = false
-const HITBOX_DEBUG_LIFETIME = 0.3
+const HITBOX_DEBUG_LIFETIME = 0.1
 
 const overlapParams = OverlapParams.new()
 overlapParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -76,10 +76,16 @@ const function HitDetectionSystem(tick: number, _delta: number)
             if not target then continue end
 
             if target == entity then continue end
-            if activeAttack.HasHit[target] then continue end
+
+            const lastHit = activeAttack.HasHit[target]
+            if lastHit then
+                if not frameData.HitInterval then continue end
+                if tick - lastHit < frameData.HitInterval then continue end
+            end
+
             if World:has(target, Components.Dead) then continue end
 
-            activeAttack.HasHit[target] = true
+            activeAttack.HasHit[target] = tick
             const pendingHit: HitQueue.PendingHit = {
                 Attacker = entity,
                 Target = target,

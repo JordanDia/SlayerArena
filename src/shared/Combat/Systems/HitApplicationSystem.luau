@@ -362,7 +362,7 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 -- A suspended victim's position is owned by their AlignPosition. An
                 -- impulse here would shove them out of the float and the next hit of
                 -- the air string would whiff.
-                if not World:has(hit.Target, Components.Suspended) then
+                if not World:has(hit.Target, Components.Suspended) and frameData.KnockbackDuration ~= 0 then
                     World:set(hit.Target, Components.Knockback, newKnockback)
                 end
 

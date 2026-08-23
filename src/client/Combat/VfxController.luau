@@ -8,6 +8,7 @@ const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Scheduler = require(ReplicatedStorage.Shared.Combat.Scheduler)
 const StretchArm = require(ReplicatedStorage.Shared.Combat.Data.StretchArm)
+const GatlingArm = require(ReplicatedStorage.Shared.Combat.Data.GatlingArm)
 
 local VfxAssets: Folder
 local ghostFolder: Folder
@@ -45,6 +46,7 @@ const RUBBLE_SINK_TIME = 0.5
 const RUBBLE_CAST_UP = 2
 const RUBBLE_CAST_DOWN = 8
 const RUBBLE_FALLBACK_COLOR = Color3.fromRGB(120, 120, 120)
+const GATLING_TRAIL_FRACTION = 0.25
 
 local handlers: { [VfxManifest.VfxKind]: (character: Model, data: Packets.VfxPayload) -> () }
 
@@ -56,52 +58,6 @@ function VfxController:Init()
     ghostFolder = Instance.new("Folder")
     ghostFolder.Name = "DashGhosts"
     ghostFolder.Parent = workspace
-
-    handlers = {
-    Hit = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_PlayHit(character)
-    end,
-
-    Knockback = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayKnockback(character, data.Duration * KNOCKBACK_DURATION_SCALE)
-    end,
-
-    Dodge = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
-    end,
-
-    SwingTrail = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlaySwingTrail(character, data.Duration)
-    end,
-
-    Dash = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayDash(character, data.Duration)
-    end,
-
-    PerfectBlock = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_PlayPerfectBlock(character)
-    end,
-
-    Geppo = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayGeppo(character, data.Direction)
-    end,
-
-    GroundSlam = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayGroundSlam(character, data.Position)
-    end,
-
-    Block = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_EmitAtRoot(character, VfxManifest.PrefabMap.Block)
-    end,
-
-    BlockBreak = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_EmitAtRoot(character, VfxManifest.PrefabMap.BlockBreak)
-    end,
-
-    PistolArm = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayStretchArm(character, StretchArm.Pistol, VfxManifest.PrefabMap.PistolArm, data.Direction)
-    end,
-}
 end
 
 function VfxController:Start()
@@ -591,6 +547,127 @@ function VfxController:_PlayGroundSlam(character: Model, position: Vector3?)
     end
 end
 
+function VfxController:_PlayGatling(character:Model, profile: GatlingArm.Profile, durationTicks: number)
+    const root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    if not root:IsA("BasePart") then return end
+
+    const sourceArm = character:FindFirstChild(STRETCH_ARM_NAME)
+    const armColor = if sourceArm and sourceArm:IsA("BasePart") then sourceArm.Color else Color3.new(1, 1, 1)
+
+    const barrageTime = Scheduler.TicksToSeconds(durationTicks)
+    const punchTime = Scheduler.TicksToSeconds(profile.PunchTicks)
+    const spawnInterval = Scheduler.TicksToSeconds(profile.Interval / 3)
+
+    type Punch = { Part: BasePart, P0: Vector3, P1: Vector3, P2: Vector3, Elapsed: number }
+    const punches: { Punch } = {}
+
+    local elapsed = 0
+    local nextSpawn = 0
+    local connection: RBXScriptConnection?
+
+    const function Stop()
+        if connection then
+            connection:Disconnect()
+        end
+
+        for _, punch in punches do
+            punch.Part:Destroy()
+        end
+
+        for _, armName in ARM_NAMES do
+            const limb = character:FindFirstChild(armName)
+            if limb and limb:IsA("BasePart") then
+                limb.LocalTransparencyModifier = 0
+            end
+        end
+    end
+
+    const function Spawn()
+        -- Each punch is launched off the root's facing at its own spawn moment, then
+        -- flies that line to the end. Sampling the root live per frame would bend an
+        -- in-flight arm sideways whenever the player swings their aim.
+        const origin = root.CFrame
+        const side = if math.random() < 0.5 then -1 else 1
+
+        const startLocal = Vector3.new(
+            side * profile.SpreadX * (0.5 + math.random() * 0.5),
+            (math.random() - 0.5) * 2 * profile.SpreadY,
+            0
+        )
+
+        const p0 = origin:PointToWorldSpace(startLocal)
+        const p2 = origin:PointToWorldSpace(Vector3.new(startLocal.X * 0.2, startLocal.Y * 0.2, -profile.Reach))
+        const p1 = (p0 + p2) / 2 + origin.RightVector * (side * profile.Curve)
+
+        const burstPoint = p0 + origin.LookVector * profile.BurstOffset
+        self:_EmitBurst(CFrame.lookAt(burstPoint, p0 + origin.LookVector), VfxManifest.PrefabMap.GatlingArm)
+
+        const part = Instance.new("Part")
+        part.Size = Vector3.new(profile.Thickness, profile.Thickness, 1)
+        part.Color = armColor
+        part.Material = Enum.Material.SmoothPlastic
+        part.Anchored = true
+        part.Massless = true
+        part.CanCollide = false
+        part.CanQuery = false
+        part.CanTouch = false
+        part.CastShadow = false
+        part.TopSurface = Enum.SurfaceType.Smooth
+        part.BottomSurface = Enum.SurfaceType.Smooth
+        part.Parent = workspace
+
+        table.insert(punches, { Part = part, P0 = p0, P1 = p1, P2 = p2, Elapsed = 0 })
+    end
+
+    connection = RunService.RenderStepped:Connect(function(deltaTime: number)
+        if not root.Parent then
+            Stop()
+            return
+        end
+
+        elapsed += deltaTime
+
+        if elapsed < barrageTime then
+            while elapsed >= nextSpawn do
+                nextSpawn += spawnInterval
+                Spawn()
+            end
+        end
+
+        for _, armName in ARM_NAMES do
+            const limb = character:FindFirstChild(armName)
+            if limb and limb:IsA("BasePart") then
+                limb.LocalTransparencyModifier = 1
+            end
+        end
+
+        for index = #punches, 1, -1 do
+            const punch = punches[index]
+            punch.Elapsed += deltaTime
+
+            const t = punch.Elapsed / punchTime
+            if t >= 1 then
+                punch.Part:Destroy()
+                table.remove(punches, index)
+                continue
+            end
+
+            const head = self:_Bezier(punch.P0, punch.P1, punch.P2, t)
+            const tail = self:_Bezier(punch.P0, punch.P1, punch.P2, math.max(t - GATLING_TRAIL_FRACTION, 0))
+            const span = head - tail
+            if span.Magnitude < 0.001 then continue end
+
+            punch.Part.Size = Vector3.new(profile.Thickness, profile.Thickness, span.Magnitude)
+            punch.Part.CFrame = CFrame.lookAt(tail + span / 2, head)
+        end
+
+        if elapsed >= barrageTime and #punches == 0 then
+            Stop()
+        end
+    end)
+end
+
 function VfxController:_PlayStretchArm(character: Model, profile: StretchArm.Profile, prefabName: string, aim: Vector3?)
     const root = character:FindFirstChild("HumanoidRootPart")
     if not root then return end
@@ -745,6 +822,46 @@ function VfxController:_PlayStretchArm(character: Model, profile: StretchArm.Pro
     end)
 end
 
+function VfxController:_EmitBurst(cframe: CFrame, prefabName: string)
+    const folder = if VfxAssets then VfxAssets:FindFirstChild(prefabName) else nil
+    if not folder then return end
+
+    const part = Instance.new("Part")
+    part.Size = Vector3.one
+    part.Transparency = 1
+    part.Anchored = true
+    part.Massless = true
+    part.CanCollide = false
+    part.CanQuery = false
+    part.CanTouch = false
+    part.CastShadow = false
+    part.CFrame = cframe
+    part.Parent = workspace
+
+    const template = folder:FindFirstChildWhichIsA("Attachment")
+    const attachment = if template then template:Clone() else Instance.new("Attachment")
+    attachment.Parent = part
+
+    if not template then
+        for _, child in folder:GetChildren() do
+            if not child:IsA("ParticleEmitter") then continue end
+            child:Clone().Parent = attachment
+        end
+    end
+
+    for _, descendant in attachment:GetDescendants() do
+        if not descendant:IsA("ParticleEmitter") then continue end
+        descendant.Enabled = false
+
+        const emitCount = descendant:GetAttribute("EmitCount")
+        descendant:Emit(if typeof(emitCount) == "number" then emitCount else DEFAULT_EMIT)
+    end
+
+    task.delay(self:_GetMaxLifetime(folder), function()
+        part:Destroy()
+    end)
+end
+
 function VfxController:_GetMaxLifetime(container: Instance): number
     local maxLifetime = 0
     for _, vfx in container:GetDescendants() do
@@ -758,6 +875,59 @@ function VfxController:_GetMaxLifetime(container: Instance): number
     return maxLifetime
 end
 
+function VfxController:_Bezier(p0: Vector3, p1: Vector3, p2: Vector3, t: number): Vector3
+    const u = 1 - t
+    return u * u * p0 + 2 * u * t * p1 + t * t * p2
+end
 
+handlers = {
+    Hit = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_PlayHit(character)
+    end,
+
+    Knockback = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayKnockback(character, data.Duration * KNOCKBACK_DURATION_SCALE)
+    end,
+
+    Dodge = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
+    end,
+
+    SwingTrail = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlaySwingTrail(character, data.Duration)
+    end,
+
+    Dash = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayDash(character, data.Duration)
+    end,
+
+    PerfectBlock = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_PlayPerfectBlock(character)
+    end,
+
+    Geppo = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayGeppo(character, data.Direction)
+    end,
+
+    GroundSlam = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayGroundSlam(character, data.Position)
+    end,
+
+    Block = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_EmitAtRoot(character, VfxManifest.PrefabMap.Block)
+    end,
+
+    BlockBreak = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_EmitAtRoot(character, VfxManifest.PrefabMap.BlockBreak)
+    end,
+
+    PistolArm = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayStretchArm(character, StretchArm.Pistol, VfxManifest.PrefabMap.PistolArm, data.Direction)
+    end,
+
+    GatlingArm = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayGatling(character, GatlingArm, data.Duration)
+    end
+}
 
 return VfxController

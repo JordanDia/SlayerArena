@@ -134,7 +134,7 @@ export type ActiveAttack = {
     Ability: Abilities.AbilityId,
     HitIndex: number,
     StartedAt: number,
-    HasHit: { [World.Entity]: boolean },
+    HasHit: { [World.Entity]: number },
     FiredVfx: { [number]: boolean },
     FiredRecoil: boolean,
     FiredSounds: { [number]: boolean },

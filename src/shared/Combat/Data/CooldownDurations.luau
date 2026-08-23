@@ -3,7 +3,7 @@
 const CooldownDurations = {
     AirDodge = 180,
     AirJump = 20,
-    Dash = 60,
+    Dash = 45,
 }
 
 const function Get(id: CooldownId): number
