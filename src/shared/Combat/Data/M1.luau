@@ -3,8 +3,11 @@
 const FrameData = require(script.Parent.FrameData)
 const Reactions = require(script.Parent.Reactions)
 
-const SwingTrail: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 6, Duration = 10}
-const SwingTrailFinisher: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 9, Duration = 10}
+-- currently unused
+const _SwingTrail: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 6, Duration = 10}
+const _SwingTrailFinisher: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 9, Duration = 10}
+
+const Swing: FrameData.SoundEntry = { Kind = "PunchSwing", Tick = 6 }
 
 const FirstHit: FrameData.FrameData = table.freeze {
     Startup = 6,
@@ -34,6 +37,8 @@ const FirstHit: FrameData.FrameData = table.freeze {
     JumpLockoutTicks = 10,
     
     Vfx = {},
+    Sound = { Swing },
+
     AnimationId = "rbxassetid://101027333825650",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -66,6 +71,8 @@ const SecondHit: FrameData.FrameData = table.freeze {
     JumpLockoutTicks = 10,
 
     Vfx = {  },
+    Sound = { Swing },
+    
     AnimationId = "rbxassetid://97544456513431",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -98,6 +105,8 @@ const ThirdHit: FrameData.FrameData = table.freeze {
     JumpLockoutTicks = 10,
 
     Vfx = {  },
+    Sound = { Swing },
+
     AnimationId = "rbxassetid://126850736653474",
     Reaction = "Light" :: Reactions.ReactionKind,
 }
@@ -130,6 +139,8 @@ const FourthHit: FrameData.FrameData = table.freeze {
     JumpLockoutTicks = 5,
 
     Vfx = {  },
+    Sound = { Swing },
+    
     AnimationId = "rbxassetid://87995838458656",
     Reaction = "Light" :: Reactions.ReactionKind,
 }

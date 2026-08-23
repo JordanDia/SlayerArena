@@ -8,6 +8,7 @@ const UserInputService = game:GetService("UserInputService")
 const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
+const FacingController = require(script.Parent.FacingController)
 
 const Player = Players.LocalPlayer
 
@@ -98,12 +99,33 @@ function CombatInputController:Start()
         return Enum.ContextActionResult.Pass
     end
 
+    const function Skill1(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
+        if inputState == Enum.UserInputState.Begin then
+            Packets.SkillHoldRequest.send(true)
+            Packets.SkillRequest.send(1)
+        elseif inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
+            FacingController:CommitAim()
+            Packets.SkillHoldRequest.send(false)
+        end
+
+        return Enum.ContextActionResult.Sink
+    end
+
     const function Grab(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
         if inputState ~= Enum.UserInputState.Begin then
             return Enum.ContextActionResult.Pass
         end
 
         Packets.GrabRequest.send()
+        return Enum.ContextActionResult.Sink
+    end
+
+    const function Sprint(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
+        if inputState ~= Enum.UserInputState.Begin then
+            return Enum.ContextActionResult.Pass
+        end
+
+        Packets.SprintToggle.send()
         return Enum.ContextActionResult.Sink
     end
 
@@ -156,6 +178,7 @@ function CombatInputController:Start()
     ContextActionService:BindAction("Block", Block, true, Enum.KeyCode.F)
     ContextActionService:BindAction("Uptitle", Uptilt, true, Enum.KeyCode.Space)
     ContextActionService:BindAction("Grab", Grab, true, Enum.KeyCode.G)
+    ContextActionService:BindAction("Skill1", Skill1, true, Enum.KeyCode.Z)
     -- ContextActionService:BindAction("Dodge", Dodge, true, Enum.KeyCode.E)
     const function GetDoubleJumpKind(): DoubleJump.DoubleJumpKind
         const localMove = GetLocalMoveDirection()
@@ -186,6 +209,7 @@ function CombatInputController:Start()
     end)
 
     ContextActionService:BindAction("Dash", DashAction, true, Enum.KeyCode.Q)
+    ContextActionService:BindAction("Sprint", Sprint, true, Enum.KeyCode.LeftControl)
 end
 
 return CombatInputController

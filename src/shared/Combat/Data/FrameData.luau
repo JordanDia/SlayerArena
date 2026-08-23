@@ -1,12 +1,18 @@
 --!strict
 
 const Reactions = require(script.Parent.Reactions)
+const SoundManifest = require(script.Parent.SoundManifest)
 const VfxManifest = require(script.Parent.VfxManifest)
 
 export type VfxEntry = {
     read Kind: VfxManifest.VfxKind,
     read Tick: number,
     read Duration: number?
+}
+
+export type SoundEntry = {
+    read Kind: SoundManifest.SoundKind,
+    read Tick: number,
 }
 
 -- Timing is in ticks, 60 Hz
@@ -42,13 +48,35 @@ export type FrameData = {
 
     read Vfx: { VfxEntry }?,
 
-    -- optional, presence means this move suspends its victim; value is float length in ticks
+    -- optional, presence means the hitbox travels outward instead of sitting at Range
+    read HitboxSpeed: number?,
+    read HitboxMaxRange: number?,
+
+    -- optional, anchors the attacker for the whole attack so gravity does not apply
+    read FreezesInPlace: boolean?,
+
+    -- optional, roots the attacker and turns them with the camera for the whole attack
+    read LocksMovement: boolean?,
+    read FacesCamera: boolean?,
+
+    -- optional, holds the last tick of startup until the input is released
+    read Chargeable: boolean?,
+    read MaxChargeTicks: number?,
+
+    -- optional, self knockback; RecoilTick is measured from the start of the attack
+    read RecoilTick: number?,
+    read RecoilSpeed: number?,
+    read RecoilUpward: number?,
+    read RecoilDuration: number?,
+    read Sound: { SoundEntry }?,
+
+    -- how long does player float in the air for uptilts?
     read SuspendTicks: number?,
 
-    -- optional, ends an in-progress suspend on contact
+    -- ends an in-progress suspend on contact
     read EndsSuspend: boolean?,
 
-    -- optional, ticks the victim is held down once they land; requires Ragdoll
+    -- how long is the entity pinned on the ground after a downslam requires Ragdoll
     read PinTicks: number?,
 
     -- optional, used for grabbing

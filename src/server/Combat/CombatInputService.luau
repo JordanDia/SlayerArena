@@ -8,6 +8,7 @@ const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
 const Scheduler = require(ReplicatedStorage.Shared.Combat.Scheduler)
+const SkillSlots = require(ReplicatedStorage.Shared.Combat.Data.SkillSlots)
 const CharacterBindingService = require("./CharacterBindingService")
 
 const CombatInputService = {}
@@ -22,6 +23,31 @@ function CombatInputService:Start()
         World:set(entity, Components.AttackIntent, {
             Ability = "M1" :: Abilities.AbilityId,
             ExpiresAt = Scheduler.GetTick() + 4
+        })
+    end)
+
+    Packets.SkillRequest.listen(function(slot: number, player: Player?)
+        if not player or not player.Character then return end
+
+        const ability = SkillSlots[slot]
+        if not ability then return end
+
+        const entity = CharacterBindingService.GetEntity(player.Character)
+        if not entity then return end
+
+        World:set(entity, Components.AttackIntent, {
+            Ability = ability,
+            ExpiresAt = Scheduler.GetTick() + 4
+        })
+    end)
+
+    Packets.SkillHoldRequest.listen(function(wants: boolean, player: Player?)
+        if not player or not player.Character then return end
+
+        const entity = CharacterBindingService.GetEntity(player.Character)
+        if not entity then return end
+        World:set(entity, Components.SkillHeld, {
+            Wants = wants
         })
     end)
 
@@ -50,10 +76,24 @@ function CombatInputService:Start()
 
         const entity = CharacterBindingService.GetEntity(player.Character)
         if not entity then return end
+
         World:set(entity, Components.AttackIntent, {
             Ability = "Grab" :: Abilities.AbilityId,
             ExpiresAt = Scheduler.GetTick() + 4
         })
+    end)
+
+    Packets.SprintToggle.listen(function(_data: nil, player: Player?)
+        if not player or not player.Character then return end
+
+        const entity = CharacterBindingService.GetEntity(player.Character)
+        if not entity then return end
+
+        if World:has(entity, Components.Sprinting) then
+            World:remove(entity, Components.Sprinting)
+        else
+            World:set(entity, Components.Sprinting, {})
+        end
     end)
 
     Packets.DoubleJumpRequest.listen(function(data: { Kind: number, Direction: Vector3 }, player: Player?)

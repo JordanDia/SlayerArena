@@ -8,7 +8,7 @@ const SwingTrail: FrameData.VfxEntry = { Kind = "SwingTrail", Tick = 10, Duratio
 const Launcher: FrameData.FrameData = table.freeze {
     Startup = 10,
     Active = 3,
-    Recovery = 25,
+    Recovery = 10,
 
     Damage = 8,
     Hitstun = 165,

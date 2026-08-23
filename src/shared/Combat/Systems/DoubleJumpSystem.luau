@@ -5,6 +5,7 @@ const Components = require(ReplicatedStorage.Shared.Combat.Components)
 const Cooldowns = require(ReplicatedStorage.Shared.Combat.Cooldowns)
 const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
+const SoundManifest = require(ReplicatedStorage.Shared.Combat.Data.SoundManifest)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const World = require(ReplicatedStorage.Shared.Combat.World)
 
@@ -72,6 +73,11 @@ const function DoubleJumpSystem(tick: number, _delta: number)
             Kind = VfxManifest.ReverseMap.Geppo,
             Duration = 0,
             Direction = velocity.Unit,
+        })
+
+        Packets.Sound.sendToAll({
+            Character = characterRef.Model,
+            Kind = SoundManifest.ReverseMap.Geppo,
         })
 
         const playerRef = World:get(entity, Components.PlayerRef)

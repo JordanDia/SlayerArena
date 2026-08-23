@@ -136,7 +136,10 @@ export type ActiveAttack = {
     StartedAt: number,
     HasHit: { [World.Entity]: boolean },
     FiredVfx: { [number]: boolean },
+    FiredRecoil: boolean,
+    FiredSounds: { [number]: boolean },
     PausedTicks: number,
+    HitboxOrigin: CFrame?,
 }
 
 export type Hitstop = {
@@ -157,6 +160,23 @@ export type Holding = {
 
 export type UptiltHeld = {
     Wants: boolean,
+}
+
+export type SkillHeld = {
+    Wants: boolean,
+}
+
+export type FacingLocked = {
+    StartedAt: number,
+}
+
+export type FrozenInPlace = {
+    StartedAt: number,
+}
+
+export type Charging = {
+    StartedAt: number,
+    Frozen: { [AnimationTrack]: number }?,
 }
 
 
@@ -219,6 +239,8 @@ export type Ragdolled = {
     Facing: Vector3,
 }
 
+export type Sprinting = {}
+
 const Components = {
     CharacterRef = World:component() :: Jecs.Id<CharacterRef>,
     PlayerRef = World:component() :: Jecs.Id<Player>,
@@ -250,6 +272,10 @@ const Components = {
     AttackIntent = World:component() :: Jecs.Id<AttackIntent>,
     Hitstop = World:component() :: Jecs.Id<Hitstop>,
     UptiltHeld = World:component() :: Jecs.Id<UptiltHeld>,
+    SkillHeld = World:component() :: Jecs.Id<SkillHeld>,
+    Charging = World:component() :: Jecs.Id<Charging>,
+    FrozenInPlace = World:component() :: Jecs.Id<FrozenInPlace>,
+    FacingLocked = World:component() :: Jecs.Id<FacingLocked>,
 
     -- Blocking
     Blocking = World:component() :: Jecs.Id<Blocking>,
@@ -282,6 +308,8 @@ const Components = {
     Suspending = World:component() :: Jecs.Id<Suspending>,
     GroundPinPending = World:component() :: Jecs.Id<GroundPinPending>,
     GroundPinned = World:component() :: Jecs.Id<GroundPinned>,
+
+    Sprinting = World:component() :: Jecs.Id<Sprinting>,
     
     -- Tags
     Dead = World:entity()

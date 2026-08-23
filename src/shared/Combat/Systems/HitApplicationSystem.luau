@@ -4,6 +4,7 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Block = require(ReplicatedStorage.Shared.Combat.Data.Block)
 const Ragdoll = require(ReplicatedStorage.Shared.Combat.Data.Ragdoll)
+const SoundManifest = require(ReplicatedStorage.Shared.Combat.Data.SoundManifest)
 const Suspend = require(ReplicatedStorage.Shared.Combat.Data.Suspend)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
@@ -33,6 +34,21 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 postureComponent.Current -= frameData.PostureDamage
                 postureComponent.Current = math.max(0, postureComponent.Current)
                 postureComponent.LastDamagedTick = tick
+            end
+
+            const targetCharacterRef = World:get(hit.Target, Components.CharacterRef)
+            if targetCharacterRef and not perfect then
+                Packets.Vfx.sendToAll({
+                    Character = targetCharacterRef.Model,
+                    Kind = VfxManifest.ReverseMap.Block,
+                    Duration = 0,
+                    Position = targetCharacterRef.Root.Position,
+                })
+
+                Packets.Sound.sendToAll({
+                    Character = targetCharacterRef.Model,
+                    Kind = SoundManifest.ReverseMap.BlockHit,
+                })
             end
 
             const blockstun = World:get(hit.Target, Components.Blockstun)
@@ -86,6 +102,11 @@ const function HitApplicationSystem(tick: number, _delta: number)
                         Duration = 0,
                         Position = attackerCharacterRef.Root.Position,
                     })
+
+                    Packets.Sound.sendToAll({
+                        Character = attackerCharacterRef.Model,
+                        Kind = SoundManifest.ReverseMap.PerfectBlock,
+                    })
                 end
             end
             
@@ -125,7 +146,8 @@ const function HitApplicationSystem(tick: number, _delta: number)
         end
 
         if characterRef then
-            Packets.Vfx.sendToAll({Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Hit, Duration = 0, Position = characterRef.Root.Position})
+            Packets.Vfx.sendToAll({ Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Hit, Duration = 0, Position = characterRef.Root.Position })
+            Packets.Sound.sendToAll({ Character = characterRef.Model, Kind = SoundManifest.ReverseMap.PunchHit })
         end
 
         World:remove(hit.Target, Components.ActiveAttack)

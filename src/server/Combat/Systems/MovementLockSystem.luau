@@ -3,7 +3,8 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Components = require(ReplicatedStorage.Shared.Combat.Components)
 const World = require(ReplicatedStorage.Shared.Combat.World)
 
-const BASE_WALK_SPEED = 16
+const BASE_WALK_SPEED = 12
+const SPRINTING_WALK_SPEED = 20
 const BASE_JUMP_HEIGHT = 7.2
 const ATTACK_WALK_SPEED_CONSTANT = 8
 const DASH_MASK = 3
@@ -22,8 +23,10 @@ const function MovementLockSystem(tick: number, _delta: number)
         -- rejection, and the whole point of suspending the attacker is that they
         -- can still act. Movement lock and action lock are separate permissions.
         const suspending = World:has(entity, Components.Suspending)
+        const sprinting = World:has(entity, Components.Sprinting)
 
-        local desiredWalkSpeed = BASE_WALK_SPEED
+        
+        local desiredWalkSpeed = sprinting and SPRINTING_WALK_SPEED or BASE_WALK_SPEED
         local desiredJumpHeight = (stunned or actionLock or jumpLockout or suspended or suspending) and 0 or BASE_JUMP_HEIGHT
         
         if suspended or suspending or hitstop or stunned or blockstun or holding then

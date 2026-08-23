@@ -1,6 +1,7 @@
 --!strict
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
+const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const Components = require("../Components")
 const World = require("../World")
 
@@ -13,6 +14,13 @@ const function AttackSystem(tick: number, _delta: number)
         const totalDuration = frameData.Startup + frameData.Active + frameData.Recovery
         if tick >= activeAttack.StartedAt + totalDuration + activeAttack.PausedTicks then
             table.insert(finishedAttacks, entity)
+
+            const playerRef = World:get(entity, Components.PlayerRef)
+            if playerRef and World:has(entity, Components.FrozenInPlace) then
+                Packets.ChargeFreeze.sendTo(false, playerRef)
+            end
+
+            World:remove(entity, Components.FrozenInPlace)
         end
     end
 
@@ -63,6 +71,8 @@ const function AttackSystem(tick: number, _delta: number)
             StartedAt = tick,
             HasHit = {},
             FiredVfx = {},
+            FiredSounds = {},
+            FiredRecoil = false,
             PausedTicks = 0,
         }
         World:set(entity, Components.ActiveAttack, newActiveAttack)
@@ -77,9 +87,22 @@ const function AttackSystem(tick: number, _delta: number)
 
         const newActionLock: Components.ActionLock = {
             EndsAt = tick + frameData.Startup + frameData.Active + frameData.Recovery,
-            Mask = 1,
+            Mask = if frameData.LocksMovement then 2 else 1,
         }
         World:set(entity, Components.ActionLock, newActionLock)
+
+        const playerRef = World:get(entity, Components.PlayerRef)
+        if playerRef then
+            if frameData.FacesCamera then
+                World:set(entity, Components.FacingLocked, { StartedAt = tick })
+                Packets.FacingLock.sendTo(true, playerRef)
+            end
+
+            if frameData.FreezesInPlace then
+                World:set(entity, Components.FrozenInPlace, { StartedAt = tick })
+                Packets.ChargeFreeze.sendTo(true, playerRef)
+            end
+        end
 
         const jumpLockout: Components.JumpLockout = {
             EndsAt = tick + frameData.Startup + frameData.Active + frameData.Recovery + frameData.JumpLockoutTicks

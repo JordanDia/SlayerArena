@@ -1,6 +1,9 @@
 --!strict
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Ragdoll = require(ReplicatedStorage.Shared.Combat.Data.Ragdoll)
+const SoundManifest = require(ReplicatedStorage.Shared.Combat.Data.SoundManifest)
+const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
+const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Components = require("../Components")
 const Headroom = require("../Headroom")
 const World = require("../World")
@@ -13,7 +16,7 @@ const World = require("../World")
     Humanoid's own idea of what it is standing on is not trustworthy here.
 ]]
 const function GroundPinSystem(tick: number, _delta: number)
-    const landed: { { Entity: World.Entity, PinTicks: number, Position: Vector3 } } = {}
+    const landed: { { Entity: World.Entity, PinTicks: number, Position: Vector3, Ground: Vector3, Model: Model } } = {}
 
     for entity, pending, characterRef in World:query(Components.GroundPinPending, Components.CharacterRef):without(Components.Dead) do
         const travel = -Vector3.yAxis * Ragdoll.PinSettleDistance
@@ -27,11 +30,23 @@ const function GroundPinSystem(tick: number, _delta: number)
         const groundPosition = characterRef.Root.Position - Vector3.yAxis * distance
         const pinPosition = groundPosition + Vector3.yAxis * Ragdoll.PinRestHeight
 
-        table.insert(landed, { Entity = entity, PinTicks = pending.PinTicks, Position = pinPosition })
+        table.insert(landed, { Entity = entity, PinTicks = pending.PinTicks, Position = pinPosition, Ground = groundPosition, Model = characterRef.Model })
     end
 
     for _, pending in landed do
         World:remove(pending.Entity, Components.GroundPinPending)
+
+        Packets.Sound.sendToAll({
+            Character = pending.Model,
+            Kind = SoundManifest.ReverseMap.GroundSlam,
+        })
+
+        Packets.Vfx.sendToAll({
+            Character = pending.Model,
+            Kind = VfxManifest.ReverseMap.GroundSlam,
+            Duration = 0,
+            Position = pending.Ground,
+        })
 
         const endsAt = tick + pending.PinTicks
         World:set(pending.Entity, Components.GroundPinned, { EndsAt = endsAt, Position = pending.Position })

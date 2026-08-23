@@ -13,6 +13,11 @@ export type VfxPayload = {
     Direction: Vector3?,
 }
 
+export type SoundPayload = {
+    Character: Instance,
+    Kind: number,
+}
+
 return ByteNet.defineNamespace("combat", function()
     return {
         AttackRequest = ByteNet.definePacket {
@@ -43,6 +48,11 @@ return ByteNet.defineNamespace("combat", function()
             reliabilityType = "reliable"
         },
 
+        SprintToggle = ByteNet.definePacket {
+            value = ByteNet.nothing,
+            reliabilityType = "reliable"
+        },
+
         -- Same split as DashRequest: Kind picks the animation and stays
         -- character-relative, Direction is the camera-relative world vector travelled.
         DoubleJumpRequest = ByteNet.definePacket {
@@ -67,6 +77,31 @@ return ByteNet.defineNamespace("combat", function()
 
         Vfx = ByteNet.definePacket {
             value = ByteNet.struct { Character = ByteNet.inst, Kind = ByteNet.uint8, Duration = ByteNet.uint16, Position = ByteNet.optional(ByteNet.vec3), Direction = ByteNet.optional(ByteNet.vec3), },
+            reliabilityType = "reliable"
+        },
+
+        Sound = ByteNet.definePacket {
+            value = ByteNet.struct { Character = ByteNet.inst, Kind = ByteNet.uint8 },
+            reliabilityType = "reliable"
+        },
+
+        SkillRequest = ByteNet.definePacket {
+            value = ByteNet.uint8,
+            reliabilityType = "reliable"
+        },
+
+        ChargeFreeze = ByteNet.definePacket {
+            value = ByteNet.bool,
+            reliabilityType = "reliable"
+        },
+
+        FacingLock = ByteNet.definePacket {
+            value = ByteNet.bool,
+            reliabilityType = "reliable"
+        },
+
+        SkillHoldRequest = ByteNet.definePacket {
+            value = ByteNet.bool,
             reliabilityType = "reliable"
         },
 

@@ -2,7 +2,7 @@
 
 const Suspend = {
     -- How high a suspend lifts the victim, in studs, before any ceiling clamp.
-    Height = 20,
+    Height = 10,
 
     -- Ticks spent travelling from the ground to Height. The float begins after this.
     RiseTicks = 12,

@@ -55,6 +55,8 @@ function CombatantFactory.Init()
     if not PhysicsService:IsCollisionGroupRegistered("Combatant") then
         PhysicsService:RegisterCollisionGroup("Combatant")
     end
+
+    PhysicsService:CollisionGroupSetCollidable("Combatant", "Combatant", false)
 end
 
 local function LoadAnimationTracks(humanoid: Humanoid): { [string]: AnimationTrack }?

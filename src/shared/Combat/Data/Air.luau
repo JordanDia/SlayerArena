@@ -50,7 +50,7 @@ const AirSlash: FrameData.FrameData = table.freeze {
 const DownSlam: FrameData.FrameData = table.freeze {
     Startup = 10,
     Active = 3,
-    Recovery = 20,
+    Recovery = 10,
 
     Damage = 15,
     Hitstun = 90,
@@ -63,8 +63,8 @@ const DownSlam: FrameData.FrameData = table.freeze {
     -- Upward and the launch height. So distance scales with Speed alone: 110 landed them
     -- ~30 studs out, 220 lands them ~61. Softening Upward would also buy distance, but by
     -- making them hang, which is the opposite of what a slam should read as.
-    KnockbackSpeed = 220,
-    KnockbackUpward = -45,
+    KnockbackSpeed = 440,
+    KnockbackUpward = -90,
     KnockbackDuration = 8,
 
     Ragdoll = true,
@@ -90,7 +90,6 @@ const DownSlam: FrameData.FrameData = table.freeze {
 } :: FrameData.FrameData
 
 const Air: { FrameData.FrameData } = {
-    AirSlash,
     DownSlam,
 }
 

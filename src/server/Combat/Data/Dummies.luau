@@ -32,8 +32,8 @@ const Dummies: { [string]: DummyKind } = {
 
     Blocking = {
         Stats = {
-            Health = 100000,
-            Posture = 100000,
+            Health = 100,
+            Posture = 100,
         },
 
         StartsBlocking = true

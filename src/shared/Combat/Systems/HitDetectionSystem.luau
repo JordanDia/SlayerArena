@@ -8,7 +8,7 @@ const World = require("../World")
 
 const RunService = game:GetService("RunService")
 
-const SHOW_HITBOXES = true
+const SHOW_HITBOXES = false
 const HITBOX_DEBUG_LIFETIME = 0.3
 
 const overlapParams = OverlapParams.new()
@@ -43,8 +43,23 @@ const function HitDetectionSystem(tick: number, _delta: number)
 
         if tick < activeStart or tick >= activeEnd then continue end
 
-        const rootCFrame = characterRef.Root.CFrame
-        const hitboxCFrame = rootCFrame * CFrame.new(0, 0, -frameData.Range)
+        local range = frameData.Range
+        local origin = characterRef.Root.CFrame
+
+        if frameData.HitboxSpeed then
+            const travelled = frameData.Range + frameData.HitboxSpeed * (tick - activeStart)
+            range = math.min(travelled, frameData.HitboxMaxRange or travelled)
+
+            -- A travelling hitbox is cast straight out of where the attacker stood when
+            -- it went live. Reading the root live instead sweeps it through an arc when
+            -- the attacker turns, which does not match what the VFX shows.
+            if not activeAttack.HitboxOrigin then
+                activeAttack.HitboxOrigin = origin
+            end
+            origin = activeAttack.HitboxOrigin :: CFrame
+        end
+
+        const hitboxCFrame = origin * CFrame.new(0, 0, -range)
 
         if SHOW_HITBOXES and RunService:IsStudio() then
             DrawHitbox(hitboxCFrame, frameData.HitboxSize)

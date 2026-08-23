@@ -18,10 +18,17 @@ const function AttackVfxSystem(tick: number, _delta: number)
             if elapsed < entry.Tick then continue end
             activeAttack.FiredVfx[index] = true
 
+            -- Travelling hitboxes are cast down the facing frozen when they went live,
+            -- so the aimed VFX is sent that direction rather than letting the client
+            -- read a root the attacker has since turned. HitDetection captures the
+            -- origin on the first active tick, which is why an aimed entry must not
+            -- fire on the startup tick itself.
+            const origin = activeAttack.HitboxOrigin
             Packets.Vfx.sendToAll({
                 Character = characterRef.Model,
                 Kind = VfxManifest.ReverseMap[entry.Kind],
                 Duration = entry.Duration or 0,
+                Direction = if origin then origin.LookVector else nil,
             })
         end
         

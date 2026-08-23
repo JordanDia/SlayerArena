@@ -7,6 +7,7 @@ const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Scheduler = require(ReplicatedStorage.Shared.Combat.Scheduler)
+const StretchArm = require(ReplicatedStorage.Shared.Combat.Data.StretchArm)
 
 local VfxAssets: Folder
 local ghostFolder: Folder
@@ -23,8 +24,27 @@ const KNOCKBACK_DURATION_SCALE = 4
 const ARM_NAMES = { "Right Arm", "Left Arm" }
 const GEPPO_DROP = 0
 const GEPPO_DEFAULT_EMIT = 15
+const DEFAULT_EMIT = 25
+const STRETCH_ARM_NAME = "Right Arm"
+const STRETCH_SHOULDER_OFFSET = Vector3.new(0, 0.9, 0)
+const STRETCH_GUST_EMITS = 5
 -- The prefab is authored lying on its side, so this rights it after it is aimed.
 const GEPPO_PREFAB_ROTATION = CFrame.Angles(0, math.rad(90), 0)
+const RUBBLE_COUNT = 9
+const RUBBLE_RADIUS_MIN = 2.5
+const RUBBLE_RADIUS_MAX = 5
+const RUBBLE_SIZE_MIN = 0.8
+const RUBBLE_SIZE_MAX = 2.4
+const RUBBLE_ANGLE_JITTER = 0.4
+const RUBBLE_TILT_MIN = 15
+const RUBBLE_TILT_MAX = 50
+const RUBBLE_RISE_FRACTION = 0.35
+const RUBBLE_RISE_TIME = 0.12
+const RUBBLE_HOLD_TIME = 0.45
+const RUBBLE_SINK_TIME = 0.5
+const RUBBLE_CAST_UP = 2
+const RUBBLE_CAST_DOWN = 8
+const RUBBLE_FALLBACK_COLOR = Color3.fromRGB(120, 120, 120)
 
 local handlers: { [VfxManifest.VfxKind]: (character: Model, data: Packets.VfxPayload) -> () }
 
@@ -36,6 +56,52 @@ function VfxController:Init()
     ghostFolder = Instance.new("Folder")
     ghostFolder.Name = "DashGhosts"
     ghostFolder.Parent = workspace
+
+    handlers = {
+    Hit = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_PlayHit(character)
+    end,
+
+    Knockback = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayKnockback(character, data.Duration * KNOCKBACK_DURATION_SCALE)
+    end,
+
+    Dodge = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
+    end,
+
+    SwingTrail = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlaySwingTrail(character, data.Duration)
+    end,
+
+    Dash = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayDash(character, data.Duration)
+    end,
+
+    PerfectBlock = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_PlayPerfectBlock(character)
+    end,
+
+    Geppo = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayGeppo(character, data.Direction)
+    end,
+
+    GroundSlam = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayGroundSlam(character, data.Position)
+    end,
+
+    Block = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_EmitAtRoot(character, VfxManifest.PrefabMap.Block)
+    end,
+
+    BlockBreak = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_EmitAtRoot(character, VfxManifest.PrefabMap.BlockBreak)
+    end,
+
+    PistolArm = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayStretchArm(character, StretchArm.Pistol, VfxManifest.PrefabMap.PistolArm, data.Direction)
+    end,
+}
 end
 
 function VfxController:Start()
@@ -63,23 +129,25 @@ function VfxController:Start()
     end)
 end
 
-function VfxController:_PlayHit(character: Model, vfxAssets: Instance)
+function VfxController:_EmitAtRoot(character: Model, prefabName: string)
+    if not VfxAssets then return end
+
     const root = character:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
     const rootAttachment = root:FindFirstChild("RootAttachment")
     if not rootAttachment then return end
 
-    const vfxFolder = vfxAssets:FindFirstChild(VfxManifest.PrefabMap.Hit)
+    const vfxFolder = VfxAssets:FindFirstChild(prefabName)
     if not vfxFolder then return end
 
     const particles: { ParticleEmitter } = {}
     for _, child in vfxFolder:GetChildren() do
         if not child:IsA("ParticleEmitter") then continue end
-        const vfx = child:Clone()
-        table.insert(particles, vfx)
 
+        const vfx = child:Clone()
         vfx.Parent = rootAttachment
+        table.insert(particles, vfx)
     end
 
     for _, vfx in particles do
@@ -87,7 +155,7 @@ function VfxController:_PlayHit(character: Model, vfxAssets: Instance)
         if typeof(emitCount) == "number" then
             vfx:Emit(emitCount)
         else
-            vfx:Emit(25)
+            vfx:Emit(DEFAULT_EMIT)
         end
     end
 
@@ -98,7 +166,10 @@ function VfxController:_PlayHit(character: Model, vfxAssets: Instance)
             vfx:Destroy()
         end
     end)
+end
 
+function VfxController:_PlayHit(character: Model)
+    self:_EmitAtRoot(character, VfxManifest.PrefabMap.Hit)
     self:_Highlight(character, HIT_HIGHLIGHT_COLOR)
 end
 
@@ -270,42 +341,7 @@ function VfxController:_SpawnGhost(character: Model)
 end
 
 function VfxController:_PlayPerfectBlock(character: Model)
-    if not VfxAssets then return end
-
-    const root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    const rootAttachment = root:FindFirstChild("RootAttachment")
-    if not rootAttachment then return end
-
-    const vfxFolder = VfxAssets:FindFirstChild(VfxManifest.PrefabMap.PerfectBlock)
-    if not vfxFolder then return end
-
-    const particles: { ParticleEmitter } = {}
-    for _, child in vfxFolder:GetChildren() do
-        if not child:IsA("ParticleEmitter") then continue end
-
-        const vfx = child:Clone()
-        vfx.Parent = rootAttachment
-        table.insert(particles, vfx)
-    end
-
-    for _, vfx in particles do
-        const emitCount = vfx:GetAttribute("EmitCount")
-        if typeof(emitCount) == "number" then
-            vfx:Emit(emitCount)
-        else
-            vfx:Emit(25)
-        end
-    end
-
-    const maxLifetime = self:_GetMaxLifetime(vfxFolder)
-
-    task.delay(maxLifetime, function()
-        for _, vfx in particles do
-            vfx:Destroy()
-        end
-    end)
+    self:_EmitAtRoot(character, VfxManifest.PrefabMap.PerfectBlock)
 end
 
 function VfxController:_PlayDash(character: Model, duration: number)
@@ -471,6 +507,244 @@ function VfxController:_PlayGeppo(character: Model, direction: Vector3?)
     end)
 end
 
+function VfxController:_ResolveGroundLook(position: Vector3, ignore: Model?): (Color3, Enum.Material)
+    const params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = { ghostFolder, ignore :: any }
+    params.IgnoreWater = true
+
+    const result = workspace:Raycast(position + Vector3.yAxis * RUBBLE_CAST_UP, -Vector3.yAxis * RUBBLE_CAST_DOWN, params)
+    if not result then return RUBBLE_FALLBACK_COLOR, Enum.Material.Slate end
+
+    if result.Instance:IsA("Terrain") then
+        const success, color = pcall(function()
+            return workspace.Terrain:GetMaterialColor(result.Material)
+        end)
+        return (if success then color else RUBBLE_FALLBACK_COLOR), result.Material
+    end
+
+    return result.Instance.Color, result.Material
+end
+
+function VfxController:_PlayGroundSlam(character: Model, position: Vector3?)
+    if not position then return end
+
+    const color, material = self:_ResolveGroundLook(position, character)
+
+    for index = 1, RUBBLE_COUNT do
+        const angle = (index - 1) / RUBBLE_COUNT * math.pi * 2 + math.random() * RUBBLE_ANGLE_JITTER
+        const radius = RUBBLE_RADIUS_MIN + math.random() * (RUBBLE_RADIUS_MAX - RUBBLE_RADIUS_MIN)
+        const outward = Vector3.new(math.cos(angle), 0, math.sin(angle))
+
+        const size = Vector3.new(
+            RUBBLE_SIZE_MIN + math.random() * (RUBBLE_SIZE_MAX - RUBBLE_SIZE_MIN),
+            RUBBLE_SIZE_MIN + math.random() * (RUBBLE_SIZE_MAX - RUBBLE_SIZE_MIN),
+            RUBBLE_SIZE_MIN + math.random() * (RUBBLE_SIZE_MAX - RUBBLE_SIZE_MIN)
+        )
+
+        const rock = Instance.new("Part")
+        rock.Size = size
+        rock.Color = color
+        rock.Material = material
+        rock.Anchored = true
+        rock.CanCollide = false
+        rock.CanQuery = false
+        rock.CanTouch = false
+        rock.CastShadow = false
+        rock.TopSurface = Enum.SurfaceType.Smooth
+        rock.BottomSurface = Enum.SurfaceType.Smooth
+
+        const spot = position + outward * radius
+        const tilt = math.rad(RUBBLE_TILT_MIN + math.random() * (RUBBLE_TILT_MAX - RUBBLE_TILT_MIN))
+        const rotation = CFrame.lookAt(Vector3.zero, outward)
+            * CFrame.Angles(tilt, 0, 0)
+            * CFrame.Angles(0, 0, math.random() * math.pi * 2)
+
+        const buried = CFrame.new(spot - Vector3.yAxis * size.Y) * rotation
+        const risen = CFrame.new(spot + Vector3.yAxis * size.Y * RUBBLE_RISE_FRACTION) * rotation
+
+        rock.CFrame = buried
+        rock.Parent = workspace
+
+        const riseTween = TweenService:Create(
+            rock,
+            TweenInfo.new(RUBBLE_RISE_TIME, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            { CFrame = risen }
+        )
+
+        const sinkTween = TweenService:Create(
+            rock,
+            TweenInfo.new(RUBBLE_SINK_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            { CFrame = buried, Transparency = 1 }
+        )
+
+        riseTween:Play()
+
+        task.delay(RUBBLE_RISE_TIME + RUBBLE_HOLD_TIME, function()
+            if not rock.Parent then return end
+            sinkTween:Play()
+        end)
+
+        task.delay(RUBBLE_RISE_TIME + RUBBLE_HOLD_TIME + RUBBLE_SINK_TIME, function()
+            rock:Destroy()
+        end)
+    end
+end
+
+function VfxController:_PlayStretchArm(character: Model, profile: StretchArm.Profile, prefabName: string, aim: Vector3?)
+    const root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    if not root:IsA("BasePart") then return end
+
+    const arm = character:FindFirstChild(STRETCH_ARM_NAME)
+    if not arm then return end
+    if not arm:IsA("BasePart") then return end
+
+    const rubber = Instance.new("Part")
+    rubber.Size = Vector3.new(profile.Thickness, profile.Thickness, 1)
+    rubber.Color = arm.Color
+    rubber.Material = Enum.Material.SmoothPlastic
+    rubber.Anchored = true
+    rubber.Massless = true
+    rubber.CanCollide = false
+    rubber.CanQuery = false
+    rubber.CanTouch = false
+    rubber.CastShadow = false
+    rubber.TopSurface = Enum.SurfaceType.Smooth
+    rubber.BottomSurface = Enum.SurfaceType.Smooth
+    rubber.LeftSurface = Enum.SurfaceType.Smooth
+    rubber.RightSurface = Enum.SurfaceType.Smooth
+    rubber.FrontSurface = Enum.SurfaceType.Smooth
+    rubber.BackSurface = Enum.SurfaceType.Smooth
+    rubber.Parent = workspace
+
+    const gust = Instance.new("Part")
+    gust.Size = Vector3.one
+    gust.Transparency = 1
+    gust.Anchored = true
+    gust.Massless = true
+    gust.CanCollide = false
+    gust.CanQuery = false
+    gust.CanTouch = false
+    gust.CastShadow = false
+    gust.Parent = workspace
+
+    const gustEmitters: { ParticleEmitter } = {}
+    const gustFolder = if VfxAssets then VfxAssets:FindFirstChild(prefabName) else nil
+
+    if gustFolder then
+        const template = gustFolder:FindFirstChildWhichIsA("Attachment")
+        const gustAttachment = if template then template:Clone() else Instance.new("Attachment")
+        gustAttachment.Parent = gust
+
+        if not template then
+            for _, child in gustFolder:GetChildren() do
+                if not child:IsA("ParticleEmitter") then continue end
+                child:Clone().Parent = gustAttachment
+            end
+        end
+
+        for _, descendant in gustAttachment:GetDescendants() do
+            if not descendant:IsA("ParticleEmitter") then continue end
+            descendant.Enabled = false
+            table.insert(gustEmitters, descendant)
+        end
+    end
+
+    const gustLifetime = if gustFolder then self:_GetMaxLifetime(gustFolder) else 0
+    local gustsFired = 0
+
+    const function EmitGust()
+        for _, emitter in gustEmitters do
+            const emitCount = emitter:GetAttribute("EmitCount")
+            if typeof(emitCount) == "number" then
+                emitter:Emit(emitCount)
+            else
+                emitter:Emit(DEFAULT_EMIT)
+            end
+        end
+    end
+
+    for _ = 1, STRETCH_GUST_EMITS do
+        EmitGust()
+    end
+
+    -- The animation keeps swinging the arm part after the launch, so the shoulder is
+    -- captured once, in root space. Reading it live would bend the limb off the line the
+    -- hitbox travels.
+    const shoulderOffset = root.CFrame:PointToObjectSpace(arm.CFrame:PointToWorldSpace(STRETCH_SHOULDER_OFFSET))
+
+    -- The server sends the facing it froze the hitbox to. Reading the root here instead
+    -- aims the limb wherever the attacker has turned since, which is what made the arm
+    -- and the hitbox disagree.
+    const direction = if aim and aim.Magnitude > 0.001 then aim.Unit else root.CFrame.LookVector
+
+    const extendTime = Scheduler.TicksToSeconds(profile.ExtendTicks)
+    const returnTime = Scheduler.TicksToSeconds(profile.ReturnTicks)
+
+    local elapsed = 0
+    local connection: RBXScriptConnection?
+
+    const function Stop()
+        if connection then
+            connection:Disconnect()
+        end
+        arm.LocalTransparencyModifier = 0
+        rubber:Destroy()
+
+        for _, emitter in gustEmitters do
+            emitter.Enabled = false
+        end
+
+        task.delay(gustLifetime, function()
+            gust:Destroy()
+        end)
+    end
+
+    connection = RunService.RenderStepped:Connect(function(deltaTime: number)
+        if not root.Parent or not arm.Parent then
+            Stop()
+            return
+        end
+
+        elapsed += deltaTime
+
+        local alpha
+        if elapsed <= extendTime then
+            alpha = TweenService:GetValue(elapsed / extendTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        else
+            const returning = (elapsed - extendTime) / returnTime
+            if returning >= 1 then
+                Stop()
+                return
+            end
+            alpha = 1 - TweenService:GetValue(returning, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+        end
+
+        arm.LocalTransparencyModifier = 1
+
+        const shoulder = root.CFrame:PointToWorldSpace(shoulderOffset)
+        const distance = profile.StartRange + (profile.MaxRange - profile.StartRange) * alpha
+
+        -- The limb runs straight out of the shoulder. Aiming it at the hitbox centre
+        -- instead pulls the near end across the chest; the hitbox is wide enough that
+        -- a shoulder-aligned arm still sits inside it.
+        const tip = shoulder + direction * distance
+        const span = tip - shoulder
+        if span.Magnitude < 0.001 then return end
+
+        rubber.Size = Vector3.new(profile.Thickness, profile.Thickness, span.Magnitude)
+        rubber.CFrame = CFrame.lookAt(shoulder + span / 2, tip)
+        gust.CFrame = CFrame.lookAt(tip, tip + direction)
+
+        const due = math.floor(math.min(elapsed / extendTime, 1) * STRETCH_GUST_EMITS)
+        while gustsFired < due do
+            gustsFired += 1
+            EmitGust()
+        end
+    end)
+end
+
 function VfxController:_GetMaxLifetime(container: Instance): number
     local maxLifetime = 0
     for _, vfx in container:GetDescendants() do
@@ -484,34 +758,6 @@ function VfxController:_GetMaxLifetime(container: Instance): number
     return maxLifetime
 end
 
-handlers = {
-    Hit = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_PlayHit(character, VfxAssets)
-    end,
 
-    Knockback = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayKnockback(character, data.Duration * KNOCKBACK_DURATION_SCALE)
-    end,
-
-    Dodge = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
-    end,
-
-    SwingTrail = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlaySwingTrail(character, data.Duration)
-    end,
-
-    Dash = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayDash(character, data.Duration)
-    end,
-
-    PerfectBlock = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_PlayPerfectBlock(character)
-    end,
-
-    Geppo = function(character: Model, data: Packets.VfxPayload)
-        VfxController:_PlayGeppo(character, data.Direction)
-    end,
-}
 
 return VfxController

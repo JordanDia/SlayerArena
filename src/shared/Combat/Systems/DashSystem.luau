@@ -6,6 +6,7 @@ const Cooldowns = require(ReplicatedStorage.Shared.Combat.Cooldowns)
 const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const VfxManifest = require(ReplicatedStorage.Shared.Combat.Data.VfxManifest)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
+const SoundManifest = require(ReplicatedStorage.Shared.Combat.Data.SoundManifest)
 const World = require(ReplicatedStorage.Shared.Combat.World)
 
 const DASH_MASK = 3
@@ -80,6 +81,11 @@ const function DashSystem(tick: number, _delta: number)
             Kind = VfxManifest.ReverseMap.Dash,
             Duration = Dash.Duration,
             Position = characterRef.Root.Position,
+        })
+
+        Packets.Sound.sendToAll({
+            Character = characterRef.Model,
+            Kind = SoundManifest.ReverseMap.Dash,
         })
 
         World:remove(entity, Components.DashIntent)
