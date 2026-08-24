@@ -1,6 +1,6 @@
 --!strict
 
-export type SoundKind = "PunchSwing" | "PunchHit" | "Geppo" | "GroundSlam" | "Dash" | "BlockHit" | "BlockBreak" | "PerfectBlock" | "GomuPistolCharge"
+export type SoundKind = "PunchSwing" | "PunchHit" | "Geppo" | "GroundSlam" | "Dash" | "BlockHit" | "BlockBreak" | "PerfectBlock"
 
 -- append only, never reorder: the byte is the wire format
 const byteMap: { SoundKind } = {
@@ -12,8 +12,7 @@ const byteMap: { SoundKind } = {
     [5] = "Dash",
     [6] = "BlockHit",
     [7] = "BlockBreak",
-    [8] = "PerfectBlock",
-    [9] = "GomuPistolCharge"
+    [8] = "PerfectBlock"
 }
 
 const reverseMap: { [SoundKind]: number } = {}

@@ -1,10 +1,11 @@
-# CombatTesting
+# DemonSlayer
 
-A server-authoritative melee combat system for Roblox, built on a fixed-tick ECS.
+A parry-based Demon Slayer RPG for Roblox, built on a server-authoritative fixed-tick ECS.
 
-The goal is a fighting-game-grade interaction loop with real frame data, honest frame advantage,
-and defensive options that beat each other in a readable rock-paper-scissors, running inside
-Roblox's networking model rather than fighting it.
+Combat is a fighting-game interaction loop with real frame data and honest frame advantage, where
+the parry — not the block — is the central defensive read. Breathing styles are earned by talking
+to NPCs and equipped into skill slots; each style is a set of data tables and animations, not a
+fork of the systems.
 
 ---
 
@@ -117,13 +118,22 @@ Configurable NPCs used as measuring instruments rather than opponents:
 
 ## Planned
 
+### Combat
+- **Parry.** A tight window on the front of the block that reverses advantage instead of merely
+  reducing it. `Invulnerable` already carries a `StartsAt` as well as an `EndsAt`, which is the
+  same shape a parry window needs.
+- **Feints.** Cancelling an attack during startup at a resource cost, so the punish read can be
+  baited. Needs a cancel branch in `AttackSystem` and a `Feinted` tag the punisher dummy can read.
+- **Critical attacks.** A damage/posture multiplier conditioned on landing out of a parry or a
+  feint, driven from `FrameData` rather than special-cased.
 - **Ragdoll** on knockback, with a getup window (`InvulnerableKind` already reserves `"Getup"`).
-- **Air dodge** replacing double jump entirely, so dodge becomes the single air-movement option and
-  spends a finite air budget. That makes its Posture cost the game's main balance lever.
-- **Anti-air normals**, closing the hole where jumping escapes pressure for free.
-- **Characters with distinct movesets.** The ability layer is already data-driven: `Abilities` maps
-  an id to a list of frame data, and every system reads the ability from data rather than naming M1.
-  A character is a set of data tables plus animations, not a fork of the systems.
+
+### RPG layer
+- **NPC dialogue** granting breathing styles. `SkillSlots` is the seam: it resolves a slot number
+  to an `AbilityId`, and is currently an empty placeholder awaiting the equipped-style resolver.
+- **Breathing styles as data.** `Abilities` maps an id to a list of frame data and every system
+  reads the ability from data rather than naming M1, so a style is new data plus animations.
+- **Persistence** for owned styles and progress (ProfileStore is already a server dependency).
 
 ---
 
