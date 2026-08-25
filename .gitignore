@@ -1,15 +1,21 @@
+# Wally dependencies - restore with `wally install`
 Packages/
 ServerPackages/
 
+# Roblox place and model files (binary; built from source by Rojo)
+*.rbxlx
+*.rbxl
+*.rbxmx
+*.rbxm
+
+# Roblox Studio lock files
+*.rbxlx.lock
+*.rbxl.lock
+
+# Rojo / tooling output
+sourcemap.json
+
+# Scratch design notes
 roblox-ecs-combat-design.md
 roblox-large-game-architecture.md
 combat-project-goal.md
-
-# Project place file
-/CombatTesting.rbxlx
-
-# Roblox Studio lock files
-/*.rbxlx.lock
-/*.rbxl.lock
-
-sourcemap.json
