@@ -1,7 +1,6 @@
 --!strict
 const Abilities = require(script.Parent.Abilities)
 const Dash = require(script.Parent.Dash)
-const Dodge = require(script.Parent.Dodge)
 const Reactions = require(script.Parent.Reactions)
 const States = require(script.Parent.States)
 
@@ -42,6 +41,5 @@ for _, animationId in Dash.AnimationMap do
     Add(animationId, true, Enum.AnimationPriority.Action)
 end
 
-Add(Dodge.AnimationId, false, Enum.AnimationPriority.Action)
 
 return table.freeze(ids)

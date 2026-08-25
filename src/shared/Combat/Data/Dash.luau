@@ -34,8 +34,6 @@ return table.freeze {
     Duration = 8,
     Speed = 90,
 
-    PostureCost = 0,
-
     GhostCount = 3,
     GhostLifetime = 0.3,
     GhostTransparency = 0.5,

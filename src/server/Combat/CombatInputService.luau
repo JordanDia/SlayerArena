@@ -51,12 +51,22 @@ function CombatInputService:Start()
         })
     end)
 
-    Packets.BlockRequest.listen(function(wants: boolean, player: Player?)
+    Packets.GuardRequest.listen(function(wants: boolean, player: Player?)
         if not player or not player.Character then return end
 
         const entity = CharacterBindingService.GetEntity(player.Character)
         if not entity then return end
-        World:set(entity, Components.BlockHeld, {
+        World:set(entity, Components.GuardHeld, {
+            Wants = wants
+        })
+    end)
+
+    Packets.CritRequest.listen(function(wants: boolean, player: Player?)
+        if not player or not player.Character then return end
+
+        const entity = CharacterBindingService.GetEntity(player.Character)
+        if not entity then return end
+        World:set(entity, Components.CritRequested, {
             Wants = wants
         })
     end)
@@ -136,16 +146,6 @@ function CombatInputService:Start()
             Direction = direction,
         }
         World:set(entity, Components.DashIntent, dashIntent)
-    end)
-
-    Packets.DodgeRequest.listen(function(_data: nil, player: Player?)
-        if not player or not player.Character then return end
-
-        const entity = CharacterBindingService.GetEntity(player.Character)
-        if not entity then return end
-        World:set(entity, Components.DodgeIntent, {
-            ExpiresAt = Scheduler.GetTick() + 4 
-        })
     end)
 end
 

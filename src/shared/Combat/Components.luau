@@ -44,20 +44,41 @@ export type ActionLock = {
     Mask: number,
 }
 
-export type InvulnerableKind = "Dodge" | "Getup" |  "Spawn"
+export type InvulnerableKind = "Getup" | "Spawn"
 export type Invulnerable = {
     StartsAt: number,
     EndsAt: number,
     Kind: InvulnerableKind,
 }
 
-export type BlockHeld = {
-    Wants: boolean
+export type GuardHeld = {
+    Wants: boolean,
+    Consumed: boolean?
+}
+
+export type Parrying = {
+    StartedAt: number,
+    EndsAt: number,
+}
+
+export type ParryChain = {
+    Count: number,
+    DecaysAt: number,
+}
+
+export type CritWindow = {
+    EndsAt: number,
+}
+
+export type CritRequested = {
+    Wants: boolean,
+    Consumed: boolean?
 }
 
 export type Blocking = {
     Since: number,
 }
+
 
 export type Blockstun = {
     EndsAt: number,
@@ -119,10 +140,6 @@ export type AirJumps = {
 
 export type JumpLockout = {
     EndsAt: number
-}
-
-export type DodgeIntent = {
-    ExpiresAt: number,
 }
 
 export type AttackIntent = {
@@ -277,13 +294,18 @@ const Components = {
     FrozenInPlace = World:component() :: Jecs.Id<FrozenInPlace>,
     FacingLocked = World:component() :: Jecs.Id<FacingLocked>,
 
+    -- Critical attacks
+    CritWindow = World:component() :: Jecs.Id<CritWindow>,
+    CritRequested = World:component() :: Jecs.Id<CritRequested>,
+
     -- Blocking
+    GuardHeld = World:component() :: Jecs.Id<GuardHeld>,
     Blocking = World:component() :: Jecs.Id<Blocking>,
-    BlockHeld = World:component() :: Jecs.Id<BlockHeld>,
+    Parrying = World:component() :: Jecs.Id<Parrying>,
+    ParryChain = World:component() :: Jecs.Id<ParryChain>,
     Blockstun = World:component() :: Jecs.Id<Blockstun>,
 
     -- Dodging
-    DodgeIntent = World:component() :: Jecs.Id<DodgeIntent>,
 
     -- Dashing
     DashIntent = World:component() :: Jecs.Id<DashIntent>,

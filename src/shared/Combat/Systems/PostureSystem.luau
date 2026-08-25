@@ -9,43 +9,39 @@ const World = require(ReplicatedStorage.Shared.Combat.World)
 
 const function PostureSystem(tick: number, _delta: number)
     for entity, posture in World:query(Components.Posture):without(Components.Dead) do
-        const blocking = World:has(entity, Components.Blocking)
-        if blocking then
-            posture.Current = math.max(posture.Current - Block.DrainPerTick, 0)
+        if posture.Current >= posture.Max then
+            World:remove(entity, Components.Blocking)
+            World:remove(entity, Components.Blockstun)
+            World:remove(entity, Components.Parrying)
+
+            const stunned: Components.Stunned = {
+                StartedAt = tick,
+                EndsAt = tick + Block.GuardBreakStun,
+                Reaction = "GuardBreak"
+            }
+            World:set(entity, Components.Stunned, stunned)
+
+
+            -- Reset, or we re-break every tick for the whole stun
+            posture.Current = 0
             posture.LastDamagedTick = tick
 
-            if posture.Current <= 0 then
-                World:remove(entity, Components.Blocking)
-                World:remove(entity, Components.Blockstun)
+            const characterRef = World:get(entity, Components.CharacterRef)
+            if characterRef then
+                Packets.Vfx.sendToAll({
+                    Character = characterRef.Model,
+                    Kind = VfxManifest.ReverseMap.BlockBreak,
+                    Duration = 0,
+                    Position = characterRef.Root.Position,
+                })
 
-                const stunned: Components.Stunned = {
-                    StartedAt = tick,
-                    EndsAt = tick + Block.GuardBreakStun,
-                    Reaction = "GuardBreak"
-                }
-                World:set(entity, Components.Stunned, stunned)
-
-                const characterRef = World:get(entity, Components.CharacterRef)
-                if characterRef then
-                    Packets.Vfx.sendToAll({
-                        Character = characterRef.Model,
-                        Kind = VfxManifest.ReverseMap.BlockBreak,
-                        Duration = 0,
-                        Position = characterRef.Root.Position,
-                    })
-
-                    Packets.Sound.sendToAll({
-                        Character = characterRef.Model,
-                        Kind = SoundManifest.ReverseMap.BlockBreak,
-                    })
-                end
-
+                Packets.Sound.sendToAll({
+                    Character = characterRef.Model,
+                    Kind = SoundManifest.ReverseMap.BlockBreak,
+                })
             end
-
-        else
-            if tick >= posture.LastDamagedTick + Block.RegenDelay then
-                posture.Current = math.min(posture.Current + Block.RegenPerTick, posture.Max)
-            end
+        elseif tick >= posture.LastDamagedTick + Block.DecayDelay then
+            posture.Current = math.max(posture.Current - Block.DecayPerTick, 0)
         end
     end
 end

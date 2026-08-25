@@ -1,39 +1,31 @@
 --!strict
 
 export type BlockData = {
-    read DrainPerTick: number,
-    read RegenPerTick: number,
-    read RegenDelay: number,
+    read ChipMultiplier: number,
+    read PostureGainMultiplier: number,
+
+    read DecayDelay: number,
+    read DecayPerTick: number,
 
     read ReleaseLag: number,
 
     read PushbackSpeed: number,
     read PushbackDuration: number,
     read GuardBreakStun: number,
-
-    read MinPostureToBlock: number,
-
-    read PerfectWindow: number,
-    read PerfectBlockstun: number,
-    read PerfectFreeze: number,
 }
 
 const Block: BlockData = {
-    DrainPerTick = 0.2,
-    RegenPerTick = 1,
-    RegenDelay = 120,
+    ChipMultiplier = 0.2,
+    PostureGainMultiplier = 1,
+
+    DecayDelay = 90,
+    DecayPerTick = 0.5,
 
     ReleaseLag = 8,
 
-    PushbackSpeed = 3,
-    PushbackDuration = 5,
+    PushbackSpeed = 0,
+    PushbackDuration = 0,
     GuardBreakStun = 120,
-
-    MinPostureToBlock = 5,
-
-    PerfectWindow = 5,
-    PerfectBlockstun = 2,
-    PerfectFreeze = 120,
 }
 
 return table.freeze(Block)

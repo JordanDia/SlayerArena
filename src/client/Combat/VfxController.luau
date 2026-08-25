@@ -18,7 +18,6 @@ const FADE_IN_TRANSPARENCY = 0
 const FADE_OUT_TRANSPARENCY = 1
 const FADE_TIME = 0.1
 const HIT_HIGHLIGHT_COLOR = Color3.fromRGB(255, 0, 0)
-const DODGE_HIGHLIGHT_COLOR = Color3.fromRGB(255, 255, 255)
 const KNOCKBACK_DURATION_SCALE = 4
 const ARM_NAMES = { "Right Arm", "Left Arm" }
 const GEPPO_DROP = 0
@@ -606,10 +605,6 @@ handlers = {
 
     Knockback = function(character: Model, data: Packets.VfxPayload)
         VfxController:_PlayKnockback(character, data.Duration * KNOCKBACK_DURATION_SCALE)
-    end,
-
-    Dodge = function(character: Model, _data: Packets.VfxPayload)
-        VfxController:_Highlight(character, DODGE_HIGHLIGHT_COLOR)
     end,
 
     SwingTrail = function(character: Model, data: Packets.VfxPayload)

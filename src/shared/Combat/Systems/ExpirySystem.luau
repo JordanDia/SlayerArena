@@ -40,7 +40,6 @@ const function ExpirySystem(tick: number, _delta: number)
     CheckExpire(Components.Hitstop, GetEndsAt, tick)
     CheckExpire(Components.Blockstun, GetEndsAt, tick)
     CheckExpire(Components.AttackIntent, GetExpiresAt, tick)
-    CheckExpire(Components.DodgeIntent, GetExpiresAt, tick)
     CheckExpire(Components.DashIntent, GetExpiresAt, tick)
     CheckExpire(Components.DoubleJumpIntent, GetExpiresAt, tick)
     CheckExpire(Components.DoubleJumping, GetEndsAt, tick)
@@ -50,6 +49,9 @@ const function ExpirySystem(tick: number, _delta: number)
     CheckExpire(Components.GroundPinPending, GetEndsAt, tick)
     CheckExpire(Components.GroundPinned, GetEndsAt, tick)
     CheckExpire(Components.JumpLockout, GetEndsAt, tick)
+
+    CheckExpire(Components.Parrying, GetEndsAt, tick)
+    CheckExpire(Components.CritWindow, GetEndsAt, tick)
 end
 
 return ExpirySystem

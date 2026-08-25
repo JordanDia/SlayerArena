@@ -79,11 +79,21 @@ function CombatInputController:Start()
         return Enum.ContextActionResult.Sink
     end
 
-    const function Block(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
+    const function Guard(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
         if inputState == Enum.UserInputState.Begin then
-            Packets.BlockRequest.send(true)
+            Packets.GuardRequest.send(true)
         elseif inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
-            Packets.BlockRequest.send(false)
+            Packets.GuardRequest.send(false)
+        end
+
+        return Enum.ContextActionResult.Pass
+    end
+
+    const function Crit(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
+        if inputState == Enum.UserInputState.Begin then
+            Packets.CritRequest.send(true)
+        elseif inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
+            Packets.CritRequest.send(false)
         end
 
         return Enum.ContextActionResult.Sink
@@ -137,17 +147,6 @@ function CombatInputController:Start()
         return Enum.ContextActionResult.Sink
     end
 
-    -- Spot dodge is temporarily disabled. The server systems are untouched;
-    -- rebind this action to bring it back.
-    -- const function Dodge(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
-    --     if inputState ~= Enum.UserInputState.Begin then
-    --         return Enum.ContextActionResult.Pass
-    --     end
-    --
-    --     Packets.DodgeRequest.send()
-    --     return Enum.ContextActionResult.Sink
-    -- end
-
     -- Snap the camera-relative input to whichever of the four character-relative kinds
     -- points most nearly the same way. Quantising here rather than sending a raw vector
     -- keeps the byte protocol, keeps the server authoritative over what a dash may be,
@@ -183,12 +182,12 @@ function CombatInputController:Start()
     end
 
     ContextActionService:BindAction("M1", Attack, true, Enum.UserInputType.MouseButton1)
-    ContextActionService:BindAction("Block", Block, true, Enum.KeyCode.F)
+    ContextActionService:BindAction("Guard", Guard, true, Enum.UserInputType.MouseButton2)
+    ContextActionService:BindAction("Crit", Crit, true, Enum.UserInputType.MouseButton3)
     ContextActionService:BindAction("Uptitle", Uptilt, true, Enum.KeyCode.Space)
     ContextActionService:BindAction("Grab", Grab, true, Enum.KeyCode.G)
     ContextActionService:BindAction("Skill1", Skill1, true, Enum.KeyCode.Z)
     ContextActionService:BindAction("Skill2", Skill2, true, Enum.KeyCode.X)
-    -- ContextActionService:BindAction("Dodge", Dodge, true, Enum.KeyCode.E)
     const function GetDoubleJumpKind(): DoubleJump.DoubleJumpKind
         const localMove = GetLocalMoveDirection()
         if not localMove then return "Neutral" end

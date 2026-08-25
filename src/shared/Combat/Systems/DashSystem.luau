@@ -32,16 +32,9 @@ const function DashSystem(tick: number, _delta: number)
         -- just before landing still fires on the landing tick, rather than being eaten.
         if CharacterState.IsAirborne(characterRef) then continue end
 
-        const posture = World:get(entity, Components.Posture)
-        if not posture then continue end
-        if posture.Current < Dash.PostureCost then continue end
-
         if World:has(entity, Components.Blocking) then
             World:remove(entity, Components.Blocking)
         end
-
-        posture.Current -= Dash.PostureCost
-        posture.LastDamagedTick = tick
 
         Cooldowns.Start(entity, "Dash", tick)
 

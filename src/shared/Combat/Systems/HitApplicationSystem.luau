@@ -3,6 +3,7 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Block = require(ReplicatedStorage.Shared.Combat.Data.Block)
+const Parry = require(ReplicatedStorage.Shared.Combat.Data.Parry)
 const Ragdoll = require(ReplicatedStorage.Shared.Combat.Data.Ragdoll)
 const SoundManifest = require(ReplicatedStorage.Shared.Combat.Data.SoundManifest)
 const Suspend = require(ReplicatedStorage.Shared.Combat.Data.Suspend)
@@ -24,76 +25,50 @@ const function HitApplicationSystem(tick: number, _delta: number)
         const invulnerable = World:get(hit.Target, Components.Invulnerable)
         if invulnerable and tick >= invulnerable.StartsAt then continue end
         
+        
+        const parrying = World:get(hit.Target, Components.Parrying)
         const blocking = World:get(hit.Target, Components.Blocking)
-        if blocking and not frameData.IgnoresBlock then
-            const perfect = tick - blocking.Since <= Block.PerfectWindow
-            const blockstunTicks = if perfect then Block.PerfectBlockstun else frameData.Blockstun
-
-            const postureComponent = World:get(hit.Target, Components.Posture)
-            if postureComponent and not perfect then
-                postureComponent.Current -= frameData.PostureDamage
-                postureComponent.Current = math.max(0, postureComponent.Current)
-                postureComponent.LastDamagedTick = tick
-            end
-
+        
+        if (parrying or blocking) and not frameData.IgnoresBlock then
             const targetCharacterRef = World:get(hit.Target, Components.CharacterRef)
-            if targetCharacterRef and not perfect then
-                Packets.Vfx.sendToAll({
-                    Character = targetCharacterRef.Model,
-                    Kind = VfxManifest.ReverseMap.Block,
-                    Duration = 0,
-                    Position = targetCharacterRef.Root.Position,
-                })
-
-                Packets.Sound.sendToAll({
-                    Character = targetCharacterRef.Model,
-                    Kind = SoundManifest.ReverseMap.BlockHit,
-                })
-            end
-
-            const blockstun = World:get(hit.Target, Components.Blockstun)
-            if blockstun then
-                blockstun.EndsAt = math.max(tick + blockstunTicks, blockstun.EndsAt)
-            else
-                World:set(hit.Target, Components.Blockstun, {
-                    EndsAt = tick + blockstunTicks
-                })
-            end
-
             const attackerCharacterRef = World:get(hit.Attacker, Components.CharacterRef)
-            if attackerCharacterRef and not perfect then
 
-                const lookVector = attackerCharacterRef.Root.CFrame.LookVector
-                const knockbackVelocity = lookVector * Block.PushbackSpeed
-                const knockback: Components.Knockback = {
-                    StartedAt = tick,
-                    EndsAt = tick + Block.PushbackDuration,
-                    Velocity = knockbackVelocity
-                }
-                World:set(hit.Target, Components.Knockback, knockback)
-            end
+            if parrying then
+                World:remove(hit.Target, Components.Parrying)
 
-            -- const activeAttack = World:get(hit.Attacker, Components.ActiveAttack)
-            -- if activeAttack then
-            --     const attackerFree = activeAttack.StartedAt + frameData.Startup + frameData.Active + frameData.Recovery + activeAttack.PausedTicks
-            --     const defenderFree = tick + blockstunTicks
-            --     const advantage = defenderFree - attackerFree
-
-            --     print(advantage)
-            -- end
-
-            if perfect then
+                -- Attacker gets punished
                 World:remove(hit.Attacker, Components.ActiveAttack)
                 World:remove(hit.Attacker, Components.ActionLock)
                 World:remove(hit.Attacker, Components.ComboChain)
 
-                const parried: Components.Stunned = {
+                World:set(hit.Attacker, Components.Stunned, {
                     StartedAt = tick,
-                    EndsAt = tick + Block.PerfectFreeze,
+                    EndsAt = tick + Parry.ParriedStun,
                     Reaction = "Parried",
                     Source = hit.Target,
-                }
-                World:set(hit.Attacker, Components.Stunned, parried)
+                })
+
+                const attackerPosture = World:get(hit.Attacker, Components.Posture)
+                if attackerPosture then
+                    attackerPosture.Current = math.min(
+                        attackerPosture.Current + Parry.AttackerPostureGain,
+                        attackerPosture.Max
+                    )
+                    attackerPosture.LastDamagedTick = tick
+                end
+
+                World:set(hit.Target, Components.CritWindow, {
+                    EndsAt = tick + Parry.CritWindow,
+                })
+
+                for _, entity in { hit.Target, hit.Attacker } do
+                    const hitstop = World:get(entity, Components.Hitstop)
+                    if hitstop then
+                        hitstop.EndsAt = math.max(tick + Parry.ParryHitstop, hitstop.EndsAt)
+                    else
+                        World:set(entity, Components.Hitstop, { EndsAt = tick + Parry.ParryHitstop })
+                    end
+                end
 
                 if attackerCharacterRef then
                     Packets.Vfx.sendToAll({
@@ -108,8 +83,49 @@ const function HitApplicationSystem(tick: number, _delta: number)
                         Kind = SoundManifest.ReverseMap.PerfectBlock,
                     })
                 end
+
+                continue
             end
-            
+
+            -- Normal block. Posture fills
+            const postureComponent = World:get(hit.Target, Components.Posture)
+            if postureComponent then
+                postureComponent.Current = math.min(
+                    postureComponent.Current + frameData.PostureDamage * Block.PostureGainMultiplier,
+                    postureComponent.Max
+                )
+                postureComponent.LastDamagedTick = tick
+            end
+
+            const blockstun = World:get(hit.Target, Components.Blockstun)
+            if blockstun then
+                blockstun.EndsAt = math.max(tick + frameData.Blockstun, blockstun.EndsAt)
+            else
+                World:set(hit.Target, Components.Blockstun, { EndsAt = tick + frameData.Blockstun })
+            end
+
+            if targetCharacterRef then
+                Packets.Vfx.sendToAll({
+                    Character = targetCharacterRef.Model,
+                    Kind = VfxManifest.ReverseMap.Block,
+                    Duration = 0,
+                    Position = targetCharacterRef.Root.Position,
+                })
+
+                Packets.Sound.sendToAll({
+                    Character = targetCharacterRef.Model,
+                    Kind = SoundManifest.ReverseMap.BlockHit,
+                })
+            end
+
+            if attackerCharacterRef then
+                const lookVector = attackerCharacterRef.Root.CFrame.LookVector
+                World:set(hit.Target, Components.Knockback, {
+                    StartedAt = tick,
+                    EndsAt = tick + Block.PushbackDuration,
+                    Velocity = lookVector * Block.PushbackSpeed,
+                })
+            end
 
             continue
         end

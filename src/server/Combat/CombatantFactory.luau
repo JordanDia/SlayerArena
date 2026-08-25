@@ -131,7 +131,7 @@ function CombatantFactory.Create(character: Model, overrides: StatOverrides?): W
     
     World:set(entity, Components.Health, { Current = entityStats.Health, Max = entityStats.Health })
     World:set(entity, Components.Stamina, { Current = entityStats.Stamina, Max = entityStats.Stamina, RegenPerTick = entityStats.StaminaRegenPerTick })
-    World:set(entity, Components.Posture, { Current = entityStats.Posture, Max = entityStats.Posture, LastDamagedTick = 0 })
+    World:set(entity, Components.Posture, { Current = 0, Max = entityStats.Posture, LastDamagedTick = 0 })
     World:set(entity, Components.AirJumps, { Used = 0, Max = entityStats.AirJumps} )
 
     const cooldowns: Components.Cooldowns = {}

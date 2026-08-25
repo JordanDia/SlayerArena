@@ -94,10 +94,10 @@ function DummyService:_SpawnDummy(spawnPart: BasePart)
     end
 
     if dummyConfig.StartsBlocking then
-        const blockHeld: Components.BlockHeld = {
+        const guardHeld: Components.GuardHeld = {
             Wants = true
         }
-        World:set(entity, Components.BlockHeld, blockHeld)
+        World:set(entity, Components.GuardHeld, guardHeld)
     end
 
     activeBySpawn[spawnPart] = dummy

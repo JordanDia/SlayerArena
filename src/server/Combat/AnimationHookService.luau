@@ -5,7 +5,6 @@ const Components = require(ReplicatedStorage.Shared.Combat.Components)
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
-const Dodge = require(ReplicatedStorage.Shared.Combat.Data.Dodge)
 const M1 = require(ReplicatedStorage.Shared.Combat.Data.M1)
 const Reactions = require(ReplicatedStorage.Shared.Combat.Data.Reactions)
 const States = require(ReplicatedStorage.Shared.Combat.Data.States)
@@ -126,18 +125,6 @@ function AnimationHookService:Init()
 
             track:Stop(0.1)
         end
-    end)
-
-    World:added(Components.Invulnerable, function(entity: World.Entity, _componentId: Jecs.Id<Components.Invulnerable>, value: Components.Invulnerable, _oldarchetype: Jecs.Archetype)
-        if value.Kind ~= "Dodge" then return end
-
-        const animationTracks = World:get(entity, Components.AnimationTracks)
-        if not animationTracks then return end
-
-        const track = animationTracks[Dodge.AnimationId]
-        if not track then return end
-
-        track:Play(0.05)
     end)
 end
 
