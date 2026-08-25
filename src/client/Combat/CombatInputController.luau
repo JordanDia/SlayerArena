@@ -99,16 +99,6 @@ function CombatInputController:Start()
         return Enum.ContextActionResult.Sink
     end
 
-    const function Uptilt(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
-        if inputState == Enum.UserInputState.Begin then
-            Packets.UptiltRequest.send(true)
-        elseif inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
-            Packets.UptiltRequest.send(false)
-        end
-
-        return Enum.ContextActionResult.Pass
-    end
-
     const function Skill1(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
         if inputState == Enum.UserInputState.Begin then
             Packets.SkillHoldRequest.send(true)
@@ -126,15 +116,6 @@ function CombatInputController:Start()
             Packets.SkillRequest.send(2)
         end
 
-        return Enum.ContextActionResult.Sink
-    end
-
-    const function Grab(_actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject): Enum.ContextActionResult?
-        if inputState ~= Enum.UserInputState.Begin then
-            return Enum.ContextActionResult.Pass
-        end
-
-        Packets.GrabRequest.send()
         return Enum.ContextActionResult.Sink
     end
 
@@ -184,8 +165,10 @@ function CombatInputController:Start()
     ContextActionService:BindAction("M1", Attack, true, Enum.UserInputType.MouseButton1)
     ContextActionService:BindAction("Guard", Guard, true, Enum.UserInputType.MouseButton2)
     ContextActionService:BindAction("Crit", Crit, true, Enum.UserInputType.MouseButton3)
-    ContextActionService:BindAction("Uptitle", Uptilt, true, Enum.KeyCode.Space)
-    ContextActionService:BindAction("Grab", Grab, true, Enum.KeyCode.G)
+    -- Space (uptilt) and G (grab) are deliberately unbound: neither is in the player
+    -- kit for a parry game. The systems behind them stay, driven by frame data, so a
+    -- breathing style skill can still launch or grab. The Punisher dummy sets its own
+    -- Grab intent server-side and is unaffected.
     ContextActionService:BindAction("Skill1", Skill1, true, Enum.KeyCode.Z)
     ContextActionService:BindAction("Skill2", Skill2, true, Enum.KeyCode.X)
     const function GetDoubleJumpKind(): DoubleJump.DoubleJumpKind

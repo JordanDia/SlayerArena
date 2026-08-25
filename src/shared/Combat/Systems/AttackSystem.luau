@@ -54,13 +54,6 @@ const function AttackSystem(tick: number, _delta: number)
         const blocking = World:has(entity, Components.Blocking)
         const blockstun = World:has(entity, Components.Blockstun)
     
-        -- ability is M1 by default, now we check hit index and uptilt
-        const uptilt: Components.UptiltHeld? = World:get(entity, Components.UptiltHeld)
-        if uptilt and uptilt.Wants and hitIndex == Abilities.Length("M1") and ability == "M1" then
-            ability = "Uptilt"
-            hitIndex = 1
-        end
-
         const frameData = Abilities.Get(ability, hitIndex)
         if attacking or stunned or actionLocked or blockstun then continue end
         if blocking and not frameData.UsableFromBlock then continue end

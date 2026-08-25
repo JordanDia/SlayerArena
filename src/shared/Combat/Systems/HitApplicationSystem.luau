@@ -382,7 +382,9 @@ const function HitApplicationSystem(tick: number, _delta: number)
                     World:set(hit.Target, Components.Knockback, newKnockback)
                 end
 
-                if characterRef and hit.HitIndex == Abilities.Length(hit.Ability) then
+                -- gated on the effect, not on chain position: M1 loops two hits with
+                -- no finisher, so "last hit of the chain" no longer means anything.
+                if characterRef and frameData.KnockbackDuration ~= 0 then
                     Packets.Vfx.sendToAll({Character = characterRef.Model, Kind = VfxManifest.ReverseMap.Knockback, Duration = frameData.KnockbackDuration})
                 end
             end
