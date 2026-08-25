@@ -1,11 +1,16 @@
-# DemonSlayer
+# SlayerArena
 
-A parry-based Demon Slayer RPG for Roblox, built on a server-authoritative fixed-tick ECS.
+A parry-based Demon Slayer battlegrounds game for Roblox, built on a server-authoritative
+fixed-tick ECS.
 
 Combat is a fighting-game interaction loop with real frame data and honest frame advantage, where
-the parry — not the block — is the central defensive read. Breathing styles are earned by talking
-to NPCs and equipped into skill slots; each style is a set of data tables and animations, not a
-fork of the systems.
+the parry — not the block — is the central defensive read. Breathing styles are picked at spawn and
+equipped into skill slots; each style is a set of data tables and animations, not a fork of the
+systems.
+
+Battlegrounds means no levels, XP, saves, quests, NPCs, or economy — you drop into an arena with a
+style and fight. The ECS underneath is not specific to that, and an RPG built on the same combat
+core is planned as a separate fork later.
 
 ---
 
@@ -119,21 +124,26 @@ Configurable NPCs used as measuring instruments rather than opponents:
 ## Planned
 
 ### Combat
-- **Parry.** A tight window on the front of the block that reverses advantage instead of merely
-  reducing it. `Invulnerable` already carries a `StartsAt` as well as an `EndsAt`, which is the
-  same shape a parry window needs.
-- **Feints.** Cancelling an attack during startup at a resource cost, so the punish read can be
-  baited. Needs a cancel branch in `AttackSystem` and a `Feinted` tag the punisher dummy can read.
-- **Critical attacks.** A damage/posture multiplier conditioned on landing out of a parry or a
-  feint, driven from `FrameData` rather than special-cased.
-- **Ragdoll** on knockback, with a getup window (`InvulnerableKind` already reserves `"Getup"`).
 
-### RPG layer
-- **NPC dialogue** granting breathing styles. `SkillSlots` is the seam: it resolves a slot number
-  to an `AbilityId`, and is currently an empty placeholder awaiting the equipped-style resolver.
-- **Breathing styles as data.** `Abilities` maps an id to a list of frame data and every system
-  reads the ability from data rather than naming M1, so a style is new data plus animations.
-- **Persistence** for owned styles and progress (ProfileStore is already a server dependency).
+The parry triangle is in: M1 loses to parry, parry loses to feint, and the feint is a right-click
+during M1 startup. Right-click is one contextual input the server resolves into feint, parry, or
+block. Posture fills toward a guard break rather than draining, so holding block is pressure rather
+than safety, and the critical is always available but only unblockable in the window after a parry.
+
+Still open:
+
+- **Ragdoll** on knockback, with a getup window (`InvulnerableKind` already reserves `"Getup"`).
+- **Juggles.** `Uptilt`/`Suspend`/`GroundPin` are implemented but no longer routed to, pending a
+  decision on whether launches belong in a parry-first game.
+
+### Breathing styles
+- **Styles as data.** `Abilities` maps an id to a list of frame data and every system reads the
+  ability from data rather than naming M1, so a style is new data plus animations.
+- **Per-entity slot resolution.** `SkillSlots` is the seam: it resolves a slot number to an
+  `AbilityId`, and is currently an empty placeholder awaiting the equipped-style resolver.
+
+### Match flow
+- **Round lifecycle** — spawn, fight, reset — plus scoring and a results screen.
 
 ---
 
