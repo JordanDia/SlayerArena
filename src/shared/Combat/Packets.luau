@@ -28,9 +28,6 @@ return ByteNet.defineNamespace("combat", function()
             value = ByteNet.nothing,
         },
 
-        -- Kind picks the animation and must stay character-relative; Direction is the
-        -- camera-relative world vector the dash actually travels along. One value
-        -- cannot do both - snapping to four axes is up to 45 degrees of error.
         DashRequest = ByteNet.definePacket {
             value = ByteNet.struct { Kind = ByteNet.uint8, Direction = ByteNet.vec3 },
         },
@@ -95,6 +92,15 @@ return ByteNet.defineNamespace("combat", function()
 
         UptiltRequest = ByteNet.definePacket {
             value = ByteNet.bool,
+        },
+
+        Rush = ByteNet.definePacket {
+            value = ByteNet.struct { Speed = ByteNet.uint16, Duration = ByteNet.uint16 }
+        },
+
+
+        StyleRequest = ByteNet.definePacket {
+            value = ByteNet.string
         }
     }
 end)

@@ -4,11 +4,12 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Components = require("@game/ReplicatedStorage/Shared/Combat/Components")
 const Packets = require("@game/ReplicatedStorage/Shared/Combat/Packets")
 const World = require("@game/ReplicatedStorage/Shared/Combat/World")
+const Cooldowns = require(ReplicatedStorage.Shared.Combat.Cooldowns)
+const Styles = require(ReplicatedStorage.Shared.Combat.Data.Styles)
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
 const Dash = require(ReplicatedStorage.Shared.Combat.Data.Dash)
 const DoubleJump = require(ReplicatedStorage.Shared.Combat.Data.DoubleJump)
 const Scheduler = require(ReplicatedStorage.Shared.Combat.Scheduler)
-const SkillSlots = require(ReplicatedStorage.Shared.Combat.Data.SkillSlots)
 const CharacterBindingService = require("./CharacterBindingService")
 
 const CombatInputService = {}
@@ -29,14 +30,19 @@ function CombatInputService:Start()
     Packets.SkillRequest.listen(function(slot: number, player: Player?)
         if not player or not player.Character then return end
 
-        const ability = SkillSlots[slot]
-        if not ability then return end
-
         const entity = CharacterBindingService.GetEntity(player.Character)
         if not entity then return end
 
+        const equipped: Components.EquippedStyle? = World:get(entity, Components.EquippedStyle)
+        if not equipped then return end
+
+        const ability = Styles.SlotToAbility(equipped.Style, slot)
+        if not ability then return end
+
+        if not Cooldowns.IsReadyKey(entity, ability, Scheduler.GetTick()) then return end
+
         World:set(entity, Components.AttackIntent, {
-            Ability = ability,
+            Ability = ability :: Abilities.AbilityId,
             ExpiresAt = Scheduler.GetTick() + 4
         })
     end)
@@ -147,6 +153,8 @@ function CombatInputService:Start()
         }
         World:set(entity, Components.DashIntent, dashIntent)
     end)
+
+    
 end
 
 return CombatInputService

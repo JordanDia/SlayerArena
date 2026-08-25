@@ -41,6 +41,8 @@ const RUBBLE_CAST_UP = 2
 const RUBBLE_CAST_DOWN = 8
 const RUBBLE_FALLBACK_COLOR = Color3.fromRGB(120, 120, 120)
 
+const WHEEL_SPIN_SPEED = -math.rad(720)
+
 local handlers: { [VfxManifest.VfxKind]: (character: Model, data: Packets.VfxPayload) -> () }
 
 const VfxController = {}
@@ -113,6 +115,42 @@ function VfxController:_EmitAtRoot(character: Model, prefabName: string)
     task.delay(maxLifetime, function()
         for _, vfx in particles do
             vfx:Destroy()
+        end
+    end)
+end
+
+function VfxController:_EmitAttachmentsAtRoot(character: Model, prefabName: string)
+    if not VfxAssets then return end
+
+    const root = character:FindFirstChild("HumanoidRootPart")
+    if not root or not root:IsA("BasePart") then return end
+
+    const vfxFolder = VfxAssets:FindFirstChild(prefabName)
+    if not vfxFolder then return end
+
+    const clones: { Attachment } = {}
+    for _, child in vfxFolder:GetChildren() do
+        if not child:IsA("Attachment") then continue end
+
+        const clone = child:Clone()
+        clone.Parent = root
+        table.insert(clones, clone)
+    end
+
+    -- Parent everything first, then emit, so both attachments fire on the same frame.
+    for _, attachment in clones do
+        for _, vfx in attachment:GetDescendants() do
+            if not vfx:IsA("ParticleEmitter") then continue end
+
+            const emitCount = vfx:GetAttribute("EmitCount")
+            vfx:Emit(if typeof(emitCount) == "number" then emitCount else DEFAULT_EMIT)
+        end
+    end
+
+    const maxLifetime = self:_GetMaxLifetime(vfxFolder)
+    task.delay(maxLifetime, function()
+        for _, attachment in clones do
+            attachment:Destroy()
         end
     end)
 end
@@ -234,6 +272,54 @@ function VfxController:_Highlight(character: Model, color: Color3)
     end)
     
     fadeIn:Play()
+end
+
+function VfxController:_PlayWaterWheel(character: Model, duration: number)
+    if not VfxAssets then return end
+
+    const root = character:FindFirstChild("HumanoidRootPart")
+    if not root or not root:IsA("BasePart") then return end
+
+    const prefab = VfxAssets:FindFirstChild(VfxManifest.PrefabMap.WaterWheel)
+    if not prefab then return end
+
+    const source = prefab:FindFirstChild("Wheel")
+    if not source or not source:IsA("PVInstance") then return end
+
+    const wheel = source:Clone()
+    for _, part in wheel:GetDescendants() do
+        if not part:IsA("BasePart") then continue end
+        part.Anchored = true
+        part.CanCollide = false
+        part.CanQuery = false
+        part.CanTouch = false
+    end
+    wheel.Parent = workspace
+
+    local angle = 0
+    local connection: RBXScriptConnection? = nil
+
+    const function Stop()
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+        wheel:Destroy()
+    end
+
+    connection = RunService.RenderStepped:Connect(function(delta: number)
+        -- The character can die or despawn mid-roll; without this the wheel is
+        -- orphaned in workspace with a live connection driving it.
+        if not root.Parent then
+            Stop()
+            return
+        end
+
+        angle += WHEEL_SPIN_SPEED * delta
+        wheel:PivotTo(root.CFrame * CFrame.Angles(angle, 0, 0))
+    end)
+
+    task.delay(Scheduler.TicksToSeconds(duration), Stop)
 end
 
 function VfxController:_SpawnGhost(character: Model)
@@ -475,6 +561,7 @@ function VfxController:_ResolveGroundLook(position: Vector3, ignore: Model?): (C
     return result.Instance.Color, result.Material
 end
 
+
 function VfxController:_PlayGroundSlam(character: Model, position: Vector3?)
     if not position then return end
 
@@ -633,7 +720,15 @@ handlers = {
 
     BlockBreak = function(character: Model, _data: Packets.VfxPayload)
         VfxController:_EmitAtRoot(character, VfxManifest.PrefabMap.BlockBreak)
-    end
+    end,
+
+    WaterSurfaceSlash = function(character: Model, _data: Packets.VfxPayload)
+        VfxController:_EmitAttachmentsAtRoot(character, VfxManifest.PrefabMap.WaterSurfaceSlash)
+    end,
+
+    WaterWheel = function(character: Model, data: Packets.VfxPayload)
+        VfxController:_PlayWaterWheel(character, data.Duration)
+    end,
 }
 
 return VfxController

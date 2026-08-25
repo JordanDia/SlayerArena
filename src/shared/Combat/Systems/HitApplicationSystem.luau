@@ -41,12 +41,15 @@ const function HitApplicationSystem(tick: number, _delta: number)
                 World:remove(hit.Attacker, Components.ActionLock)
                 World:remove(hit.Attacker, Components.ComboChain)
 
-                World:set(hit.Attacker, Components.Stunned, {
+                -- Annotated rather than inlined so "Parried" keeps its literal type;
+                -- same reason as the newStun local further down.
+                const parriedStun: Components.Stunned = {
                     StartedAt = tick,
                     EndsAt = tick + Parry.ParriedStun,
                     Reaction = "Parried",
                     Source = hit.Target,
-                })
+                }
+                World:set(hit.Attacker, Components.Stunned, parriedStun)
 
                 const attackerPosture = World:get(hit.Attacker, Components.Posture)
                 if attackerPosture then

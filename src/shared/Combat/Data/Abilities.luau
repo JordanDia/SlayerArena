@@ -5,8 +5,9 @@ const FrameData = require(script.Parent.FrameData)
 const Grab = require(script.Parent.Grab)
 const M1 = require(script.Parent.M1)
 const Uptilt = require(script.Parent.Uptilt)
+const Styles = require(script.Parent.Styles)
 
-export type AbilityId = "M1" | "Grab" | "Uptilt" | "Air" | "Crit" | "CritEmpowered"
+export type AbilityId = "M1" | "Grab" | "Uptilt" | "Air" | "Crit" | "CritEmpowered" | "WaterSurfaceSlash"
 
 const Abilities: { [AbilityId]: { FrameData.FrameData } } = {
     M1 = M1,
@@ -17,6 +18,10 @@ const Abilities: { [AbilityId]: { FrameData.FrameData } } = {
     CritEmpowered = Crit.Empowered,
 
 }
+
+for id, skill in Styles.SkillRegistry do
+    Abilities[id :: AbilityId] = skill.Hits
+end
 
 const function Get(ability: AbilityId, hitIndex: number)
     return Abilities[ability][hitIndex]

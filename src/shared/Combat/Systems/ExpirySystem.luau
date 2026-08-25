@@ -1,6 +1,7 @@
 --!strict
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-const Jecs = require("../../../Packages/Jecs")
+const Jecs = require(ReplicatedStorage.Packages.Jecs)
 const Components = require("../Components")
 const World = require("../World")
 
@@ -49,7 +50,6 @@ const function ExpirySystem(tick: number, _delta: number)
     CheckExpire(Components.GroundPinPending, GetEndsAt, tick)
     CheckExpire(Components.GroundPinned, GetEndsAt, tick)
     CheckExpire(Components.JumpLockout, GetEndsAt, tick)
-
     CheckExpire(Components.Parrying, GetEndsAt, tick)
     CheckExpire(Components.CritWindow, GetEndsAt, tick)
 end

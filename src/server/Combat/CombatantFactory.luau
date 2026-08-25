@@ -56,7 +56,7 @@ function CombatantFactory.Init()
         PhysicsService:RegisterCollisionGroup("Combatant")
     end
 
-    PhysicsService:CollisionGroupSetCollidable("Combatant", "Combatant", false)
+    PhysicsService:CollisionGroupSetCollidable("Combatant", "Combatant", true)
 end
 
 local function LoadAnimationTracks(humanoid: Humanoid): { [string]: AnimationTrack }?
@@ -133,6 +133,7 @@ function CombatantFactory.Create(character: Model, overrides: StatOverrides?): W
     World:set(entity, Components.Stamina, { Current = entityStats.Stamina, Max = entityStats.Stamina, RegenPerTick = entityStats.StaminaRegenPerTick })
     World:set(entity, Components.Posture, { Current = 0, Max = entityStats.Posture, LastDamagedTick = 0 })
     World:set(entity, Components.AirJumps, { Used = 0, Max = entityStats.AirJumps} )
+    World:set(entity, Components.EquippedStyle, { Style = "Water"})
 
     const cooldowns: Components.Cooldowns = {}
     World:set(entity, Components.Cooldowns, cooldowns)

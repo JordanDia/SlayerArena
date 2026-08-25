@@ -11,8 +11,10 @@ const byteMap: { DashKind } = {
 
 const reverseMap: { [DashKind]: number } = {}
 
+-- The cast is Luau's limitation, not a real widening: an annotated table literal
+-- does not carry its element type into generic iteration, so dashKind reads as string.
 for byte, dashKind in byteMap do
-    reverseMap[dashKind] = byte
+    reverseMap[dashKind :: DashKind] = byte
 end
 
 const animationMap: { [DashKind]: string } = {

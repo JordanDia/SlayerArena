@@ -2,7 +2,9 @@
 
 const Players = game:GetService("Players")
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const ServerScriptService = game:GetService("ServerScriptService")
 
+const StyleService = require(ServerScriptService.Server.Styles.StyleService)
 const CombatantFactory = require(script.Parent.CombatantFactory)
 const Trove = require(ReplicatedStorage.Packages.Trove)
 const World = require(ReplicatedStorage.Shared.Combat.World)
@@ -11,8 +13,13 @@ const EntityRegistry = require(ReplicatedStorage.Shared.Combat.EntityRegistry)
 
 const CharacterBindingService = {}
 
-const trovesByPlayer: { [Player]: Trove.Trove } = {}
-const characterTroves: { [Model] : Trove.Trove} = {}
+-- Derived from the constructor rather than the module's exported alias: the Wally
+-- linker re-exports it as a distinct table type, so the annotation and Trove.new()
+-- do not unify.
+type Trove = typeof(Trove.new())
+
+const trovesByPlayer: { [Player]: Trove } = {}
+const characterTroves: { [Model]: Trove } = {}
 
 function CharacterBindingService.GetEntity(model: Model): World.Entity?
     return EntityRegistry.Get(model)
@@ -27,11 +34,15 @@ local function MarkDead(character: Model)
     print(`Marking entity id { entity } as dead`)
 end
 
-local function Bind(player: Player, character: Model, characterTrove: Trove.Trove)
+local function Bind(player: Player, character: Model, characterTrove: Trove)
     const entity = CombatantFactory.Create(character)
     if not entity then return end
 
     World:set(entity, Components.PlayerRef, player)
+    const chosen = StyleService:GetStyle(player)
+    if chosen then
+        World:set(entity, Components.EquippedStyle, { Style = chosen })
+    end
 
     const characterRef = World:get(entity, Components.CharacterRef)
     if characterRef then
@@ -119,7 +130,5 @@ function CharacterBindingService:Start()
     end
 
 end
-
-
 
 return CharacterBindingService

@@ -1,6 +1,8 @@
 --!strict
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const Cooldowns = require(ReplicatedStorage.Shared.Combat.Cooldowns)
 const Abilities = require(ReplicatedStorage.Shared.Combat.Data.Abilities)
+const Styles = require(ReplicatedStorage.Shared.Combat.Data.Styles)
 const Packets = require(ReplicatedStorage.Shared.Combat.Packets)
 const Components = require("../Components")
 const World = require("../World")
@@ -66,10 +68,16 @@ const function AttackSystem(tick: number, _delta: number)
             FiredVfx = {},
             FiredSounds = {},
             FiredRecoil = false,
+            FiredRush = false,
             PausedTicks = 0,
         }
         World:set(entity, Components.ActiveAttack, newActiveAttack)
         World:remove(entity, Components.Blocking)
+
+        const skill = Styles.SkillRegistry[ability]
+        if skill then
+            Cooldowns.StartKey(entity, ability, tick, skill.Cooldown)
+        end
         
         const newComboChain: Components.ComboChain = {
             Index = hitIndex,

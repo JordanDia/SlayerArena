@@ -63,7 +63,9 @@ local function GetLocalMoveDirection(): Vector3?
     const root = character:FindFirstChild("HumanoidRootPart")
     if not root or not root:IsA("BasePart") then return nil end
 
-    return root.CFrame:VectorToObjectSpace(move)
+    -- Parenthesised to truncate: VectorToObjectSpace is typed as returning a
+    -- '...Vector3' tail, which does not satisfy the 'Vector3?' return on its own.
+    return (root.CFrame:VectorToObjectSpace(move))
 end
 
 const CombatInputController = {}
@@ -139,11 +141,13 @@ function CombatInputController:Start()
         local bestKind: Dash.DashKind = "Forward"
         local bestDot = -math.huge
 
+        -- Same Luau limitation as Dash.luau's reverseMap loop: the map's key type
+        -- does not survive generic iteration, so kind reads as string.
         for kind, direction in Dash.DirectionMap do
             const dot = localMove:Dot(direction)
             if dot > bestDot then
                 bestDot = dot
-                bestKind = kind
+                bestKind = kind :: Dash.DashKind
             end
         end
 
@@ -185,7 +189,7 @@ function CombatInputController:Start()
             const dot = localMove:Dot(direction)
             if dot > bestDot then
                 bestDot = dot
-                bestKind = kind
+                bestKind = kind :: DoubleJump.DoubleJumpKind
             end
         end
 

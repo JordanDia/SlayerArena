@@ -13,6 +13,7 @@ Replion = "ytrev/replion@2.0.1"
 ByteNet = "ffrostflame/bytenet@0.4.6"
 Fusion = "elttob/fusion@0.3.0"
 ExpressivePrompts = "miagobble/expressive-prompts@1.1.5"
+TopbarPlus = "1foreverhd/topbarplus@3.4.0"
 
 [server-dependencies]
 ProfileStore = "aspecky/profilestore@0.3.0"

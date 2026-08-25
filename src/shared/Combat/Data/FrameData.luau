@@ -74,6 +74,10 @@ export type FrameData = {
     read RecoilDuration: number?,
     read Sound: { SoundEntry }?,
 
+    read RushTick: number?,
+    read RushSpeed: number?,
+    read RushDuration: number?,
+
     -- how long does player float in the air for uptilts?
     read SuspendTicks: number?,
 

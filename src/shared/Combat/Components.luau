@@ -113,7 +113,7 @@ export type DashIntent = {
     Direction: Vector3,
 }
 
-export type Cooldowns = { [CooldownDurations.CooldownId]: number }
+export type Cooldowns = { [string]: number }
 
 export type ComboChain = {
     Index: number,
@@ -157,6 +157,7 @@ export type ActiveAttack = {
     FiredSounds: { [number]: boolean },
     PausedTicks: number,
     HitboxOrigin: CFrame?,
+    FiredRush: boolean
 }
 
 export type Hitstop = {
@@ -258,9 +259,14 @@ export type Ragdolled = {
 
 export type Sprinting = {}
 
+export type EquippedStyle = {
+    Style: string
+}
+
 const Components = {
     CharacterRef = World:component() :: Jecs.Id<CharacterRef>,
     PlayerRef = World:component() :: Jecs.Id<Player>,
+    EquippedStyle = World:component() :: Jecs.Id<EquippedStyle>,
 
     -- Resources
     Health = World:component() :: Jecs.Id<Health>,

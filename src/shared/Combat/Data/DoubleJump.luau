@@ -14,8 +14,10 @@ const byteMap: { DoubleJumpKind } = {
 
 const reverseMap: { [DoubleJumpKind]: number } = {}
 
+-- See Dash.luau: an annotated table literal does not carry its element type into
+-- generic iteration, so doubleJumpKind reads as string without the cast.
 for byte, doubleJumpKind in byteMap do
-    reverseMap[doubleJumpKind] = byte
+    reverseMap[doubleJumpKind :: DoubleJumpKind] = byte
 end
 
 const directionMap: { [DoubleJumpKind]: Vector3 } = {
@@ -28,10 +30,10 @@ const directionMap: { [DoubleJumpKind]: Vector3 } = {
 
 const animationMap: { [DoubleJumpKind]: string } = {
     Neutral = "",
-    Forward = Dash.AnimationMap.Forward,
-    Back = Dash.AnimationMap.Back,
-    Left = Dash.AnimationMap.Left,
-    Right = Dash.AnimationMap.Right,
+    Forward = Dash.AnimationMap["Forward" :: Dash.DashKind],
+    Back = Dash.AnimationMap["Back" :: Dash.DashKind],
+    Left = Dash.AnimationMap["Left" :: Dash.DashKind],
+    Right = Dash.AnimationMap["Right" :: Dash.DashKind],
 }
 
 return table.freeze {

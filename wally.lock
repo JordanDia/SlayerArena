@@ -3,6 +3,11 @@
 registry = "test"
 
 [[package]]
+name = "1foreverhd/topbarplus"
+version = "3.4.0"
+dependencies = []
+
+[[package]]
 name = "aspecky/profilestore"
 version = "0.3.0"
 dependencies = []
@@ -28,9 +33,9 @@ version = "0.4.6"
 dependencies = []
 
 [[package]]
-name = "jordan/combattesting"
+name = "jordan/demonslayer"
 version = "0.1.0"
-dependencies = [["ByteNet", "ffrostflame/bytenet@0.4.6"], ["ExpressivePrompts", "miagobble/expressive-prompts@1.1.5"], ["Fusion", "elttob/fusion@0.3.0"], ["Jecs", "ukendio/jecs@0.11.0"], ["Promise", "evaera/promise@4.0.0"], ["Replion", "ytrev/replion@2.0.1"], ["Signal", "sleitnick/signal@2.0.3"], ["Trove", "sleitnick/trove@1.8.0"], ["ProfileStore", "aspecky/profilestore@0.3.0"]]
+dependencies = [["ByteNet", "ffrostflame/bytenet@0.4.6"], ["ExpressivePrompts", "miagobble/expressive-prompts@1.1.5"], ["Fusion", "elttob/fusion@0.3.0"], ["Jecs", "ukendio/jecs@0.11.0"], ["Promise", "evaera/promise@4.0.0"], ["Replion", "ytrev/replion@2.0.1"], ["Signal", "sleitnick/signal@2.0.3"], ["TopbarPlus", "1foreverhd/topbarplus@3.4.0"], ["Trove", "sleitnick/trove@1.8.0"], ["ProfileStore", "aspecky/profilestore@0.3.0"]]
 
 [[package]]
 name = "miagobble/expressive-prompts"

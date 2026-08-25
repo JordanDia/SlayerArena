@@ -23,4 +23,21 @@ function Cooldowns.Start(entity: World.Entity, id: CooldownDurations.CooldownId,
     cooldowns[id] = tick + CooldownDurations.Get(id)
 end
 
+function Cooldowns.IsReadyKey(entity: World.Entity, key: string, tick: number): boolean?
+    const cooldowns = World:get(entity, Components.Cooldowns)
+    if not cooldowns then return true end
+
+    return tick >= (cooldowns[key] or 0)
+end
+
+function Cooldowns.StartKey(entity: World.Entity, key: string, tick: number, duration: number)
+    local existing: Components.Cooldowns? = World:get(entity, Components.Cooldowns)
+    const cooldowns: Components.Cooldowns = existing or {}
+    if not existing then
+        World:set(entity, Components.Cooldowns, cooldowns)
+    end
+
+    cooldowns[key] = tick + duration
+end
+
 return Cooldowns
